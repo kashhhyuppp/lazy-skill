@@ -67,13 +67,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // Mirror onto the history rows the user actually looks at.
-  const installStatus =
-    status === "succeeded" ? "success" : status === "failed" ? "failed" : "running";
-
   const agents = Array.isArray(input.agents)
     ? input.agents.filter((a): a is string => typeof a === "string").slice(0, 6)
     : null;
+
+  // Mirror onto the history rows the user actually looks at.
+  //
+  // For a per-agent report the *stage* decides that agent's outcome, not the
+  // job status: the CLI keeps the job "running" while it works through the
+  // remaining agents, so reading the job status here would leave a finished
+  // agent marked running and let the closing summary overwrite it.
+  const perAgentTerminal =
+    agents && agents.length > 0 && (stage === "done" || stage === "failed");
+
+  const installStatus = perAgentTerminal
+    ? stage === "done"
+      ? "success"
+      : "failed"
+    : status === "succeeded"
+      ? "success"
+      : status === "failed"
+        ? "failed"
+        : "running";
+
+  const rowIsFinished = perAgentTerminal || TERMINAL.has(status);
 
   let update = supabase
     .from("installations")
@@ -81,13 +98,21 @@ export async function POST(request: Request) {
       status: installStatus,
       stage,
       error,
-      ...(TERMINAL.has(status) ? { finished_at: new Date().toISOString() } : {}),
+      ...(rowIsFinished ? { finished_at: new Date().toISOString() } : {}),
     })
     .eq("job_id", input.jobId);
 
-  // A per-agent report only touches that agent's row, so one failing target
-  // does not mark the others failed.
-  if (agents && agents.length > 0) update = update.in("agent_id", agents);
+  if (agents && agents.length > 0) {
+    // A per-agent report only touches that agent's row, so one failing target
+    // does not mark the others failed.
+    update = update.in("agent_id", agents);
+  } else {
+    // A job-level report is a summary, and must not overwrite an outcome an
+    // agent already reported for itself. Without this, the closing
+    // "succeeded" wipes a per-agent failure and a partial install is shown
+    // as a clean success.
+    update = update.in("status", ["pending", "running"]);
+  }
 
   await update;
 
