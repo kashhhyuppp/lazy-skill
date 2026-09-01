@@ -6,7 +6,7 @@
 | 2 | Live skills registry integration, search, trending | **code complete** — needs a Vercel link to run live |
 | 3 | Supabase, auth, favorites, collections, profiles | **code complete** — needs a Supabase project |
 | 4 | XP, levels, streaks, achievements, quests, leaderboard | **code complete** — needs the Supabase project |
-| 5 | CLI: `npx lazy-skill connect`, themes, QR generation, secure pairing | not started |
+| 5 | CLI, QR, pairing, device auth | **code complete** — needs Supabase + PAIRING_SECRET to run live |
 | 6 | Web QR scanner, pairing flow, device management, realtime | not started |
 | 7 | Claude / Codex / Cursor adapters | not started |
 | 8 | Remote installation, progress, history | not started |
@@ -169,6 +169,77 @@ Real players only — the board is never padded. When it is empty, a separately
 headed, badged block shows what a populated board looks like; its rows are
 obviously fictional, carry a neutral placeholder instead of an initial, and
 are never ranked alongside real players (§35/§62).
+
+## Phase 5 — the CLI and device pairing
+
+Migration: `supabase/migrations/0003_phase5_devices.sql`. Also needs
+`PAIRING_SECRET` (32+ chars) and `SUPABASE_SERVICE_ROLE_KEY` on the server.
+
+Build and run the CLI locally:
+
+```bash
+pnpm cli:build
+LAZY_SKILL_API_URL=http://localhost:3000 node cli/dist/index.js connect
+```
+
+### Pairing threat model
+
+The pairing code is displayed on a screen and photographed, so it is treated
+as public the moment it renders. It is therefore:
+
+- 32 bytes of CSPRNG entropy, base64url encoded
+- valid for two minutes
+- single-use, enforced by a conditional `update ... is null` on `claimed_at`,
+  so two phones racing cannot both claim it
+- **not a credential**. Holding it grants nothing. Claiming it requires a
+  signed-in user, and the device is bound to whoever that is.
+
+Stored secrets are HMACs, never plaintext: a database leak yields nothing
+replayable because the pepper lives in the environment. The device token is
+returned to the CLI exactly once and erased from the row in the same request;
+a replayed poll gets `consumed`.
+
+Unknown and expired codes return the same response, so polling cannot be used
+to discover whether a code ever existed. The pairing endpoints are rate
+limited, and the code travels in the URL **fragment**, which browsers do not
+send to servers — keeping it out of proxy logs and `Referer` headers.
+
+`pairing_tokens` has RLS enabled and deliberately no policies at all: it is
+unreachable with the anon key, and only the service-role routes touch it.
+
+The CLI stores its device token in `~/.lazyskill/config.json`, written `0600`
+inside a `0700` directory, with the modes re-applied explicitly because
+`mkdir`/`writeFile` modes are subject to umask.
+
+### The QR carries no secrets
+
+It encodes only `${APP_URL}/pair#<code>` — a short-lived code and nothing
+else. No API keys, no session, no long-lived token.
+
+**A real bug found and fixed here:** `node-qrcode` silently ignores its
+`margin` option in `small` terminal mode, shipping only a single module of
+quiet zone where the standard wants four. Finder patterns sitting flush
+against terminal text measurably degrades scanning. `renderQr` now adds the
+quiet zone itself — two blank rows (each row is two modules tall) and three
+extra columns per side on top of the one already present.
+
+`pnpm test` covers it: payload integrity across the encoder's mode-splitting,
+error-correction level, that real 32-byte codes stay a modest QR version, that
+the quiet zone is present on all four sides, that every row has an identical
+visible width, and that the escape wrapper stays balanced so colour cannot
+bleed into the terminal. One test asserts that `margin` is *still* ignored, so
+if a future version fixes it the workaround gets flagged for removal.
+
+### Agent detection is never assumed
+
+Adapters live one-per-agent under `cli/src/adapters` (§22) and report only
+what they can actually find — a config directory or a binary on PATH. Anything
+not found is reported as "Not detected", never as ready (§13). `-v` prints the
+evidence for each detection so it can be audited.
+
+`lazy-skill install` is deliberately not implemented: rather than shell out to
+something unvalidated, it says local install is not wired up yet and points at
+the upstream installer that works today. Remote install is Phase 8.
 
 ## Phase 1 notes for later phases
 

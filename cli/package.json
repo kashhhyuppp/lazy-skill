@@ -1,0 +1,40 @@
+{
+  "name": "lazy-skill",
+  "version": "0.1.0",
+  "description": "Found a skill? Don't hunt for it. Install it from your phone.",
+  "type": "module",
+  "bin": {
+    "lazy-skill": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node test/qr.test.mjs",
+    "pretest": "tsc -p tsconfig.json"
+  },
+  "keywords": [
+    "ai",
+    "skills",
+    "claude",
+    "codex",
+    "cursor",
+    "cli"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5"
+  }
+}
