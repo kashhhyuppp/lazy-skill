@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lazy Skill
 
-## Getting Started
+**See it. Search it. Install it.**
 
-First, run the development server:
+Found an AI skill while scrolling? Stop hunting for the repo, the README, and
+the install command buried in step four. Search it here and send it straight to
+your AI workspace.
+
+## Status
+
+Phase 1 (brand, design system, core UI) is complete and running locally.
+Phases 2–9 are not started. See `docs/PHASES.md`.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Opens on http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Where things live
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/app/               routes — (app) is the signed-in shell, / is marketing
+src/components/brand/  mascot + logo, authored as pixel grids
+src/components/ui/     primitives (Button, Panel, Badge, PixelProgress…)
+src/lib/providers/     the only place that knows where skill data comes from
+src/lib/themes.ts      the 7 themes; ids are shared with the CLI when pairing
+src/types/skill.ts     domain model — unknown fields are null, never guessed
+```
 
-## Learn More
+## Two rules the code holds to
 
-To learn more about Next.js, take a look at the following resources:
+**Nothing is invented.** Install counts, compatibility, and audit results are
+`null` when the source did not report them, and the UI renders "—" or
+"unavailable" rather than a plausible-looking default.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Sample data is always labelled.** Everything currently on screen comes from
+`src/lib/providers/demo-data.ts`, is namespaced under a `demo` owner, and
+carries a visible badge. It disappears the moment a live provider is wired in.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Known blocker
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The skills.sh API requires a Vercel OIDC token — every endpoint returns 401
+without one. Resolving this is the first task of Phase 2.
