@@ -1,26 +1,256 @@
 @import "tailwindcss";
 
+/* ============================================================
+   LAZY SKILL — design tokens
+   Dark-first. Terminal + arcade cabinet. Pixel-art accents.
+   Accent ramp is swapped per theme via [data-theme] on <html>.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Structural palette — constant across themes */
+  --ls-bg:          #07070b;
+  --ls-bg-deep:     #050508;
+  --ls-surface:     #0f0f16;
+  --ls-surface-2:   #16161f;
+  --ls-surface-3:   #1d1d29;
+  --ls-border:      #24242f;
+  --ls-border-soft: #1a1a24;
+  --ls-text:        #ececf4;
+  --ls-text-dim:    #9a9aae;
+  --ls-text-faint:  #63637a;
+
+  /* Semantic — constant */
+  --ls-ok:    #35d67f;
+  --ls-warn:  #f5b445;
+  --ls-fail:  #f2555a;
+
+  /* Accent ramp — default: Purple Night */
+  --ls-accent:       #a855f7;
+  --ls-accent-hi:    #c98bff;
+  --ls-accent-lo:    #6d28d9;
+  --ls-accent-ink:   #0b0512;
+  --ls-accent-rgb:   168 85 247;
+  /* Support hue — the second colour in every lockup, QR frame and CLI line. */
+  --ls-support:      #5eead4;
+  --ls-support-rgb:  94 234 212;
+}
+
+[data-theme="cyber-blue"] {
+  --ls-accent:     #38bdf8;
+  --ls-accent-hi:  #7dd7ff;
+  --ls-accent-lo:  #0369a1;
+  --ls-accent-ink: #02121b;
+  --ls-accent-rgb: 56 189 248;
+  --ls-support:    #a78bfa;
+  --ls-support-rgb: 167 139 250;
+}
+[data-theme="matrix-green"] {
+  --ls-accent:     #38e07b;
+  --ls-accent-hi:  #7cf5ab;
+  --ls-accent-lo:  #15803d;
+  --ls-accent-ink: #04140a;
+  --ls-accent-rgb: 56 224 123;
+  --ls-support:    #67e8f9;
+  --ls-support-rgb: 103 232 249;
+}
+[data-theme="sakura-pink"] {
+  --ls-accent:     #f472b6;
+  --ls-accent-hi:  #ffa3d2;
+  --ls-accent-lo:  #9d2765;
+  --ls-accent-ink: #1a0611;
+  --ls-accent-rgb: 244 114 182;
+  --ls-support:    #c4b5fd;
+  --ls-support-rgb: 196 181 253;
+}
+[data-theme="sunset-orange"] {
+  --ls-accent:     #fb923c;
+  --ls-accent-hi:  #ffb877;
+  --ls-accent-lo:  #b45309;
+  --ls-accent-ink: #180a02;
+  --ls-accent-rgb: 251 146 60;
+  --ls-support:    #fbbf24;
+  --ls-support-rgb: 251 191 36;
+}
+[data-theme="teal-mint"] {
+  --ls-accent:     #2dd4bf;
+  --ls-accent-hi:  #79f0e1;
+  --ls-accent-lo:  #0f766e;
+  --ls-accent-ink: #021513;
+  --ls-accent-rgb: 45 212 191;
+  --ls-support:    #a78bfa;
+  --ls-support-rgb: 167 139 250;
+}
+[data-theme="monochrome"] {
+  --ls-accent:     #e4e4ec;
+  --ls-accent-hi:  #ffffff;
+  --ls-accent-lo:  #71717a;
+  --ls-accent-ink: #0a0a0c;
+  --ls-accent-rgb: 228 228 236;
+  --ls-support:    #a1a1aa;
+  --ls-support-rgb: 161 161 170;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg:          var(--ls-bg);
+  --color-bg-deep:     var(--ls-bg-deep);
+  --color-surface:     var(--ls-surface);
+  --color-surface-2:   var(--ls-surface-2);
+  --color-surface-3:   var(--ls-surface-3);
+  --color-line:        var(--ls-border);
+  --color-line-soft:   var(--ls-border-soft);
+  --color-ink:         var(--ls-text);
+  --color-dim:         var(--ls-text-dim);
+  --color-faint:       var(--ls-text-faint);
+  --color-accent:      var(--ls-accent);
+  --color-accent-hi:   var(--ls-accent-hi);
+  --color-accent-lo:   var(--ls-accent-lo);
+  --color-accent-ink:  var(--ls-accent-ink);
+  --color-support:     var(--ls-support);
+  --color-ok:          var(--ls-ok);
+  --color-warn:        var(--ls-warn);
+  --color-fail:        var(--ls-fail);
+
+  --font-pixel: var(--font-silkscreen), "Courier New", monospace;
+  --font-mono:  var(--font-jetbrains), ui-monospace, monospace;
+  --font-sans:  var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-none: 0px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- base ---------- */
+
+* { border-color: var(--ls-border); }
+
+html {
+  color-scheme: dark;
+  scrollbar-color: var(--ls-surface-3) transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--ls-bg);
+  color: var(--ls-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Ambient room texture: dot grid + a soft accent bloom at the top.
+   Fixed so it never scrolls — the app feels like it sits inside a cabinet. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1100px 620px at 50% -12%, rgb(var(--ls-accent-rgb) / 0.13), transparent 68%),
+    radial-gradient(760px 460px at 104% 6%, rgb(var(--ls-support-rgb) / 0.09), transparent 62%),
+    radial-gradient(circle at center, rgb(255 255 255 / 0.038) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 22px 22px;
+  transition: background-image 420ms ease;
+}
+
+/* CRT scanlines — very low opacity, purely atmospheric */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.5;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0) 0px,
+    rgb(0 0 0 / 0) 2px,
+    rgb(0 0 0 / 0.16) 3px,
+    rgb(0 0 0 / 0) 4px
+  );
+}
+
+::selection { background: rgb(var(--ls-accent-rgb) / 0.32); color: #fff; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--ls-surface-3);
+  border: 2px solid var(--ls-bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ls-accent-lo); }
+
+/* ---------- utilities ---------- */
+
+@utility pixelated { image-rendering: pixelated; }
+
+/* Hard 1px inner rule used to fake a beveled arcade edge */
+@utility bevel {
+  box-shadow:
+    inset 1px 1px 0 rgb(255 255 255 / 0.05),
+    inset -1px -1px 0 rgb(0 0 0 / 0.5);
+}
+
+@utility glow-accent {
+  box-shadow: 0 0 0 1px rgb(var(--ls-accent-rgb) / 0.4),
+              0 0 28px -6px rgb(var(--ls-accent-rgb) / 0.5);
+}
+
+@utility glow-support {
+  box-shadow: 0 0 0 1px rgb(var(--ls-support-rgb) / 0.4),
+              0 0 28px -6px rgb(var(--ls-support-rgb) / 0.5);
+}
+
+@utility text-glow {
+  text-shadow: 0 0 18px rgb(var(--ls-accent-rgb) / 0.55);
+}
+
+/* The card treatment from the brand board: rounded, hairline-lit edge over a
+   near-black fill, with the accent bleeding through at low alpha. */
+@utility card-edge {
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 1px 2px rgb(0 0 0 / 0.5);
+}
+
+/* Traffic-light dots on terminal cards. */
+@utility term-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+}
+
+/* ---------- animation ---------- */
+
+@keyframes ls-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes ls-blink { 0%, 92%, 100% { opacity: 1; } 96% { opacity: 0; } }
+@keyframes ls-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes ls-zzz {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.7); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(14px, -26px) scale(1.15); }
+}
+@keyframes ls-scan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+@keyframes ls-sheen {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(320%) skewX(-18deg); }
+}
+@keyframes ls-pop {
+  0%   { transform: scale(0.82); opacity: 0; }
+  60%  { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.anim-float { animation: ls-float 3.6s ease-in-out infinite; }
+.anim-caret { animation: ls-caret 1.05s step-end infinite; }
+.anim-zzz   { animation: ls-zzz 3s ease-out infinite; }
+.anim-pop   { animation: ls-pop 260ms cubic-bezier(.2,.9,.3,1.4) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-float, .anim-zzz, .anim-caret, .anim-pop { animation: none !important; }
+  * { transition-duration: 0.01ms !important; }
 }
