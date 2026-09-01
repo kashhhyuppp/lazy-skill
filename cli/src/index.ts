@@ -7,6 +7,7 @@ import { statusCommand } from "./commands/status.js";
 import { skillsCommand } from "./commands/skills.js";
 import { installCommand } from "./commands/install.js";
 import { themeCommand } from "./commands/theme.js";
+import { listenCommand } from "./commands/listen.js";
 
 const VERSION = "0.1.0";
 
@@ -19,6 +20,7 @@ function help(): void {
 
   ${style.bold("Usage")}
     ${cmd("lazy-skill connect")}Pair this computer with the app
+    ${cmd("lazy-skill listen")}Wait for installs sent from your phone
     ${cmd("lazy-skill status")}Show connection and detected tools
     ${cmd("lazy-skill skills")}List skills installed on this computer
     ${cmd("lazy-skill disconnect")}Revoke this computer
@@ -27,6 +29,7 @@ function help(): void {
 
   ${style.bold("Options")}
     ${cmd("--agent=<ids>")}Comma-separated agents to install to
+    ${cmd("--listen")}After connecting, keep waiting for installs
     ${cmd("-p, --project")}Install into this project, not globally
     ${cmd("-y, --yes")}Skip the confirmation prompt
     ${cmd("-v, --verbose")}Show how each tool was detected
@@ -57,11 +60,13 @@ async function main(): Promise<number> {
 
   switch (command) {
     case "connect":
-      return connectCommand({ verbose });
+      return connectCommand({ verbose, listen: flags.has("--listen") });
     case "disconnect":
       return disconnectCommand();
     case "status":
       return statusCommand();
+    case "listen":
+      return listenCommand({ once: flags.has("--once") });
     case "skills":
       return skillsCommand();
     case "theme":

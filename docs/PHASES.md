@@ -9,7 +9,7 @@
 | 5 | CLI, QR, pairing, device auth | **code complete** — needs Supabase + PAIRING_SECRET to run live |
 | 6 | Web QR scanner, pairing flow, device management, realtime | **code complete** — needs Supabase + PAIRING_SECRET to run live |
 | 7 | Claude / Codex / Cursor adapters | **done and verified against real installs** |
-| 8 | Remote installation, progress, history | not started |
+| 8 | Remote install, progress, history | **code complete** — the remote loop is unverified without a live database |
 | 9 | Polish, PWA, SEO, performance, security review | not started |
 
 ## Phase 2 — skills.sh integration
@@ -367,6 +367,76 @@ A real install of `vercel-labs/agent-skills` was run in an isolated temporary
 project: 9 skills landed on disk, linked to the single requested agent and no
 others, confirmed by `skills list --json`. Project scope (`-p`) exists partly
 so this can be tested without writing into a developer's global skills.
+
+## Phase 8 — remote installation
+
+Migration: `supabase/migrations/0004_phase8_remote_install.sql`.
+
+```
+phone  →  POST /api/install        queues intent
+                                   ↓
+CLI    →  POST /api/cli/jobs/claim atomic hand-off, one job to one caller
+       →  runs the Phase 7 adapter
+       →  POST /api/cli/jobs/progress
+                                   ↓
+phone  ←  Supabase Realtime on installations
+```
+
+### The server queues intent, never commands
+
+A job names one operation from a four-value vocabulary and carries structured
+parameters. There is no path, no flag, no version, and no command line
+anywhere in the payload — `scope` is a two-value enum, not a directory. A
+compromised server can queue a *different* `INSTALL_SKILL`, but it cannot
+express anything outside `src/lib/jobs/contract.ts` (§56).
+
+### The CLI does not trust the server
+
+Everything the server sends is re-validated on the device before anything
+runs: the command against the vocabulary, the skill reference against the same
+anchored pattern used in Phase 7, and the agent list against what this machine
+actually has. A job for an agent that is not installed is refused rather than
+attempted (§13).
+
+The contract is **deliberately duplicated** — the CLI carries its own copy
+rather than importing the server's. A device must not depend on the server for
+its definition of what is safe; if the server is compromised, that file is the
+only thing between it and the user's machine. `scripts/test-contract-drift.mts`
+asserts the two copies stay identical: same vocabularies, same reference
+pattern, and identical accept/reject decisions across a battery of hostile
+inputs plus 200 random references. If someone loosens one side, the test fails.
+
+### Concurrency and failure
+
+- `claim_next_job` uses `for update skip locked`, so two CLI instances polling
+  the same device can never both take the same job.
+- Jobs expire after 15 minutes. A laptop that was closed does not wake up and
+  install something the user gave up on, and the sweep marks the history rows
+  failed with a reason rather than leaving them pending forever.
+- Progress is reported per agent, so one failing target does not mark the
+  others failed. A job succeeds if any target succeeded, and the per-agent
+  errors are still shown.
+- Losing a progress update never aborts an install that is otherwise fine.
+- The device polls rather than holding a socket: it survives sleep, captive
+  portals and proxies, with nothing to reconnect and no long-lived connection
+  holding a credential open. Network errors back off exponentially; a revoked
+  device is told plainly and stops.
+
+### UI
+
+The install sheet derives its phase from the database rows rather than
+tracking it separately, so the screen cannot disagree with what actually
+happened. Offline devices are still selectable, with a note that the install
+starts when that machine next runs `lazy-skill listen`.
+
+### What is and is not verified
+
+The **local** install path is verified against real installs (Phase 7): 9
+skills to disk, correct agent scoping.
+
+The **remote** loop — queue, claim, progress, realtime — is code complete but
+has not been run against a live database, because that needs a Supabase
+project and a real paired device. Treat it as unproven until it is.
 
 ## Phase 1 notes for later phases
 

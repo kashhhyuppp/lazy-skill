@@ -6,7 +6,6 @@ import { getSkillsProvider } from "@/lib/providers";
 import { CATEGORIES } from "@/types/skill";
 import { compactNumber, relativeDate } from "@/lib/utils";
 import { Panel, PanelLabel } from "@/components/ui/panel";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SkillSigil } from "@/components/skills/skill-sigil";
 import { SkillCard } from "@/components/skills/skill-card";
@@ -14,6 +13,8 @@ import { CompatBadges } from "@/components/skills/compat-badges";
 import { SkillActions } from "@/components/skills/skill-actions";
 import { getUser } from "@/lib/supabase/server";
 import { listCollections } from "@/lib/db/collections";
+import { listDevices } from "@/lib/db/devices";
+import { InstallButton } from "@/components/install/install-button";
 import { DemoDataBanner } from "@/components/layout/data-banner";
 
 type Props = { params: Promise<{ slug: string[] }> };
@@ -65,7 +66,9 @@ export default async function SkillDetailPage({ params }: Props) {
   if (!skill) notFound();
 
   const [related, user] = await Promise.all([provider.related(path, 3), getUser()]);
-  const collections = user ? await listCollections() : [];
+  const [collections, devices] = user
+    ? await Promise.all([listCollections(), listDevices()])
+    : [[], []];
 
   return (
     <div className="space-y-4">
@@ -170,9 +173,11 @@ export default async function SkillDetailPage({ params }: Props) {
         {/* ---------- rail ---------- */}
         <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <Panel className="p-5">
-            <Button size="lg" pixel className="w-full text-[11px]">
-              INSTALL
-            </Button>
+            <InstallButton
+              skill={{ id: skill.id, name: skill.name }}
+              devices={devices}
+              signedIn={Boolean(user)}
+            />
             <div className="mt-2.5">
               <SkillActions
                 skill={{ id: skill.id, name: skill.name, source: skill.source }}

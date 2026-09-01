@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getUser } from "@/lib/supabase/server";
 import { listCollections } from "@/lib/db/collections";
+import { listInstallations } from "@/lib/db/installations";
+import { InstallHistory } from "./install-history";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Button } from "@/components/ui/button";
 import { CollectionsManager } from "./collections-manager";
@@ -31,7 +33,10 @@ export default async function LibraryPage() {
     );
   }
 
-  const collections = await listCollections();
+  const [collections, installs] = await Promise.all([
+    listCollections(),
+    listInstallations(),
+  ]);
 
   return (
     <div className="space-y-5">
@@ -50,6 +55,8 @@ export default async function LibraryPage() {
       ) : (
         <CollectionsManager initial={collections} />
       )}
+
+      <InstallHistory rows={installs} />
     </div>
   );
 }

@@ -47,7 +47,10 @@ function printAgents(theme: Theme, agents: AgentStatus[]): void {
   }
 }
 
-export async function connectCommand(options: { verbose: boolean }): Promise<number> {
+export async function connectCommand(options: {
+  verbose: boolean;
+  listen?: boolean;
+}): Promise<number> {
   const config = readConfig();
   const theme = THEMES[config.theme];
 
@@ -156,6 +159,15 @@ export async function connectCommand(options: { verbose: boolean }): Promise<num
     console.log(bottom(theme));
     console.log();
     console.log(`  ${style.gray("Credential stored in ~/.lazyskill/config.json (0600).")}`);
+
+    if (options.listen) {
+      const { listenCommand } = await import("./listen.js");
+      return listenCommand();
+    }
+
+    console.log(
+      `  ${style.gray("Run")} ${rgb(theme.accent, "lazy-skill listen")} ${style.gray("to install from your phone.")}`
+    );
     console.log();
     return 0;
   }
