@@ -19,7 +19,7 @@ function help(): void {
   ${style.bold("LAZY")} ${rgb(theme.accent, style.bold("SKILL"))}${rgb(theme.support, " Zz")}   ${style.gray("See it. Search it. Install it.")}
 
   ${style.bold("Usage")}
-    ${cmd("lazy-skill connect")}Pair this computer with the app
+    ${cmd("lazy-skill connect")}Pair, then wait for installs
     ${cmd("lazy-skill listen")}Wait for installs sent from your phone
     ${cmd("lazy-skill status")}Show connection and detected tools
     ${cmd("lazy-skill skills")}List skills installed on this computer
@@ -29,7 +29,7 @@ function help(): void {
 
   ${style.bold("Options")}
     ${cmd("--agent=<ids>")}Comma-separated agents to install to
-    ${cmd("--listen")}After connecting, keep waiting for installs
+    ${cmd("--no-listen")}Pair only; do not wait for installs
     ${cmd("-p, --project")}Install into this project, not globally
     ${cmd("-y, --yes")}Skip the confirmation prompt
     ${cmd("-v, --verbose")}Show how each tool was detected
@@ -60,7 +60,11 @@ async function main(): Promise<number> {
 
   switch (command) {
     case "connect":
-      return connectCommand({ verbose, listen: flags.has("--listen") });
+      return connectCommand({
+        verbose,
+        // Listening is the default; --no-listen opts out.
+        listen: flags.has("--no-listen") ? false : true,
+      });
     case "disconnect":
       return disconnectCommand();
     case "status":

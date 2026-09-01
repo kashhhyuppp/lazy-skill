@@ -160,16 +160,20 @@ export async function connectCommand(options: {
     console.log();
     console.log(`  ${style.gray("Credential stored in ~/.lazyskill/config.json (0600).")}`);
 
-    if (options.listen) {
-      const { listenCommand } = await import("./listen.js");
-      return listenCommand();
+    // Keep listening by default. Someone who has just paired a computer and
+    // reached for their phone wants an install to land, not a second command
+    // to remember — a queued job with nothing polling for it just looks broken.
+    if (options.listen === false) {
+      console.log(
+        `  ${style.gray("Run")} ${rgb(theme.accent, "lazy-skill listen")} ${style.gray("when you want to install from your phone.")}`
+      );
+      console.log();
+      return 0;
     }
 
-    console.log(
-      `  ${style.gray("Run")} ${rgb(theme.accent, "lazy-skill listen")} ${style.gray("to install from your phone.")}`
-    );
     console.log();
-    return 0;
+    const { listenCommand } = await import("./listen.js");
+    return listenCommand();
   }
 
   const reason =
