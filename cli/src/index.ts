@@ -26,6 +26,9 @@ function help(): void {
     ${cmd("lazy-skill install <ref>")}Install a skill locally
 
   ${style.bold("Options")}
+    ${cmd("--agent=<ids>")}Comma-separated agents to install to
+    ${cmd("-p, --project")}Install into this project, not globally
+    ${cmd("-y, --yes")}Skip the confirmation prompt
     ${cmd("-v, --verbose")}Show how each tool was detected
     ${cmd("-h, --help")}This
     ${cmd("--version")}Print the version
@@ -63,8 +66,12 @@ async function main(): Promise<number> {
       return skillsCommand();
     case "theme":
       return themeCommand(positional[1]);
-    case "install":
-      return installCommand(positional[1]);
+    case "install": {
+      const agentFlag = argv.find((a) => a.startsWith("--agent="))?.split("=")[1];
+      const yes = flags.has("-y") || flags.has("--yes");
+      const project = flags.has("-p") || flags.has("--project");
+      return installCommand(positional[1], { agents: agentFlag, yes, project });
+    }
     default:
       console.error(`\n  ${style.red("✗")} Unknown command "${command}".\n`);
       help();

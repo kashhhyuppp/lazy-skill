@@ -3,7 +3,22 @@ import { claudeAdapter } from "./claude.js";
 import { codexAdapter } from "./codex.js";
 import { cursorAdapter } from "./cursor.js";
 
-export type { AgentAdapter, AgentId, DetectionResult } from "./types.js";
+export type {
+  AgentAdapter,
+  AgentId,
+  DetectionResult,
+  InstallPlan,
+  InstallOutcome,
+  InstallProgress,
+  UpstreamAgentId,
+} from "./types.js";
+export {
+  createInstallPlan,
+  describePlan,
+  isValidSkillRef,
+  InvalidPlanError,
+  UPSTREAM_AGENTS,
+} from "./install-plan.js";
 
 export const ADAPTERS: AgentAdapter[] = [claudeAdapter, codexAdapter, cursorAdapter];
 
@@ -12,6 +27,10 @@ export interface AgentStatus {
   label: string;
   detected: boolean;
   evidence?: string;
+}
+
+export function adapterFor(id: string): AgentAdapter | null {
+  return ADAPTERS.find((adapter) => adapter.id === id) ?? null;
 }
 
 /** Runs every detector in parallel. A detector that throws counts as absent. */

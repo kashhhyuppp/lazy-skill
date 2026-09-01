@@ -8,7 +8,7 @@
 | 4 | XP, levels, streaks, achievements, quests, leaderboard | **code complete** — needs the Supabase project |
 | 5 | CLI, QR, pairing, device auth | **code complete** — needs Supabase + PAIRING_SECRET to run live |
 | 6 | Web QR scanner, pairing flow, device management, realtime | **code complete** — needs Supabase + PAIRING_SECRET to run live |
-| 7 | Claude / Codex / Cursor adapters | not started |
+| 7 | Claude / Codex / Cursor adapters | **done and verified against real installs** |
 | 8 | Remote installation, progress, history | not started |
 | 9 | Polish, PWA, SEO, performance, security review | not started |
 
@@ -299,6 +299,74 @@ token stops authenticating immediately.
 Live updates come from a Supabase Realtime subscription on `devices`, which
 the CLI already heartbeats into — so a machine coming online or a newly
 installed agent appears without polling.
+
+## Phase 7 — install adapters
+
+### Verified against the real installer, not the docs
+
+The website's CLI page lists no flags at all. `skills --help` and the package
+itself do. Captured from `skills@1.5.23`:
+
+- `skills add <pkg> --agent <ids> --skill '*' --yes [--global]`
+- Agent ids are `claude-code`, `codex`, `cursor`, `copilot`, `windsurf`,
+  `gemini`, and others — note `claude-code`, not `claude`
+- Skills land in `~/.agents/skills/<name>` and are linked into
+  `~/.claude/skills`, `~/.codex/skills`, `~/.cursor/skills`
+
+**An unknown `--agent` value is silently ignored** rather than rejected. That
+is why `createInstallPlan` validates agent ids itself: passing an unchecked
+value through would install somewhere the user never asked for.
+
+### This is not a remote shell
+
+The trust boundary is `cli/src/adapters/install-plan.ts`, which is pure and
+executes nothing. A skill reference may arrive from a phone, a server or a
+shell argument, so it is validated against an anchored pattern and only ever
+emitted as a distinct element of an argv array. The runner spawns a fixed
+binary with `shell: false`, so no argument is ever parsed by a shell, and `--`
+terminates option parsing.
+
+The most dangerous shape is not a semicolon — it is a reference beginning with
+a dash, which the installer would read as a flag rather than a package. Both
+are rejected.
+
+The installer version is **pinned**. An unpinned `npx` executes whatever the
+registry serves at that moment; a test asserts the pin is an exact version
+rather than a tag.
+
+Adapters re-narrow any plan they are handed to their own agent before running,
+so an adapter can never install to an agent it does not represent.
+
+The exact command is printed before anything runs, and the user confirms
+unless `-y` is passed (§23).
+
+### Tests
+
+26 checks across the CLI. The install-plan suite is weighted toward refusal:
+shell metacharacters, flag-shaped references, path traversal, absolute paths,
+URLs and `git@` remotes, both length boundaries, unknown agents, and
+non-string input. Two further checks assert that no argv element can contain a
+metacharacter and that the version pin is exact.
+
+### Two bugs found by running it for real
+
+1. **Progress ran backwards.** The installer prints
+   `Agent detected — installing non-interactively` as its *first* line, which
+   a bare "installing" keyword test read as the install stage before anything
+   had downloaded. Stage matching now uses the installer's real markers, and
+   the runner clamps progress to move forward only. A regression test replays
+   the captured transcript.
+2. **`NO_COLOR` was being ignored.** A developer's inherited `FORCE_COLOR`
+   wins over it downstream, putting escape sequences back into the output this
+   parser reads. `FORCE_COLOR` is now removed from the child environment
+   rather than merely overridden.
+
+### Verified end to end
+
+A real install of `vercel-labs/agent-skills` was run in an isolated temporary
+project: 9 skills landed on disk, linked to the single requested agent and no
+others, confirmed by `skills list --json`. Project scope (`-p`) exists partly
+so this can be tested without writing into a developer's global skills.
 
 ## Phase 1 notes for later phases
 

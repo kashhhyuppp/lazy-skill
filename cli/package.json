@@ -17,7 +17,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node test/qr.test.mjs",
+    "test": "node test/qr.test.mjs && node test/install-plan.test.mjs && node test/stage.test.mjs",
     "pretest": "tsc -p tsconfig.json"
   },
   "keywords": [
