@@ -110,6 +110,26 @@ export function createInstallPlan(input: {
 }
 
 /**
+ * Splits a registry id into the package and skill the installer expects.
+ *
+ * A registry id is `{source}/{slug}`, and for GitHub sources the source is
+ * itself `owner/repo` — so `skills-101/superpowers/ai-video-generation` means
+ * the repo `skills-101/superpowers` and the single skill
+ * `ai-video-generation`. Passing the whole id as the package makes the
+ * installer look for a repository that does not exist, and it reports
+ * "No valid skills found" rather than failing loudly.
+ *
+ * A two-segment id is a whole repository, so every skill in it is installed.
+ */
+export function splitSkillRef(skillRef: string): { pkg: string; skill: string } {
+  const parts = skillRef.split("/");
+  if (parts.length >= 3) {
+    return { pkg: parts.slice(0, 2).join("/"), skill: parts.slice(2).join("/") };
+  }
+  return { pkg: skillRef, skill: "*" };
+}
+
+/**
  * The exact argv passed to the installer.
  *
  * Every element is either a fixed literal or a value already validated above,
@@ -118,6 +138,8 @@ export function createInstallPlan(input: {
  * flag even if the pattern above is ever loosened.
  */
 export function buildInstallArgs(plan: InstallPlan): string[] {
+  const { pkg, skill } = splitSkillRef(plan.skillRef);
+
   const args = [
     "--yes",
     UPSTREAM_PACKAGE,
@@ -125,13 +147,13 @@ export function buildInstallArgs(plan: InstallPlan): string[] {
     "--agent",
     plan.agents.join(","),
     "--skill",
-    "*",
+    skill,
     "--yes",
   ];
 
   if (plan.scope === "global") args.push("--global");
 
-  args.push("--", plan.skillRef);
+  args.push("--", pkg);
   return args;
 }
 

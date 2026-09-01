@@ -216,9 +216,18 @@ export function InstallDialog({
               </div>
 
               <div className="mt-5">
-                <p className="font-pixel text-[9px] uppercase tracking-[0.12em] text-faint">
-                  Install for
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="font-pixel text-[9px] uppercase tracking-[0.12em] text-faint">
+                    Install for
+                  </p>
+                  <p className="text-[11px] text-faint">
+                    {touched
+                      ? `${selected.length} selected`
+                      : available.length > 1
+                        ? "all — tap one to narrow"
+                        : ""}
+                  </p>
+                </div>
                 {available.length === 0 ? (
                   <p className="mt-2.5 text-[13px] text-faint">
                     That computer reports no supported tools.
@@ -232,11 +241,18 @@ export function InstallDialog({
                         <button
                           key={id}
                           onClick={() => {
-                            const next = on
-                              ? selected.filter((a) => a !== id)
-                              : [...selected, id];
-                            setTouched(true);
-                            setChosen(next);
+                            // Everything is selected by default, so the first
+                            // tap means "just this one" — otherwise tapping
+                            // the agent you want silently deselects it and
+                            // installs to the other two instead.
+                            if (!touched) {
+                              setTouched(true);
+                              setChosen([id]);
+                              return;
+                            }
+                            setChosen(
+                              on ? selected.filter((a) => a !== id) : [...selected, id]
+                            );
                           }}
                           aria-pressed={on}
                           className={cn(
