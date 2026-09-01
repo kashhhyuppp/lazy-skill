@@ -46,10 +46,8 @@ export function parseDetectedAgents(value: unknown): AgentId[] {
   return [...seen];
 }
 
-/** Pairing codes are 32 random bytes, base64url encoded. */
-export function isCodeShaped(value: unknown): value is string {
-  return typeof value === "string" && /^[A-Za-z0-9_-]{40,64}$/.test(value);
-}
+// Re-exported so routes and the client agree on one definition of a code.
+export { isCodeShaped } from "./code";
 
 export function isDeviceTokenShaped(value: unknown): value is string {
   return typeof value === "string" && /^lsk_[A-Za-z0-9_-]{40,64}$/.test(value);

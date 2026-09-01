@@ -88,7 +88,7 @@ export function Logo({
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMark size={size} mono={mono} />
       {showWord && (
-        <span className="font-pixel text-[13px] leading-none tracking-tight">
+        <span className="whitespace-nowrap font-pixel text-[13px] leading-none tracking-tight">
           <span className="text-ink">LAZY</span>{" "}
           <span className={mono ? "text-ink" : "text-accent"}>SKILL</span>
         </span>

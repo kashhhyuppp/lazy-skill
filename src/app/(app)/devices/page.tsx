@@ -1,11 +1,19 @@
+import Link from "next/link";
 import type { Metadata } from "next";
+import { getUser } from "@/lib/supabase/server";
+import { listDevices } from "@/lib/db/devices";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Panel, PanelLabel } from "@/components/ui/panel";
+import { Button } from "@/components/ui/button";
 import { Terminal } from "@/components/marketing/terminal";
+import { DeviceList, ReconnectHint } from "./device-list";
 
 export const metadata: Metadata = { title: "Devices" };
 
-export default function DevicesPage() {
+export default async function DevicesPage() {
+  const user = await getUser();
+  const devices = user ? await listDevices() : [];
+
   return (
     <div className="space-y-5">
       <div>
@@ -15,33 +23,64 @@ export default function DevicesPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {!user ? (
         <EmptyState
           expression="waiting"
-          title="YOUR COMPUTER IS LONELY."
-          body="Connect it. Pairing takes about six seconds."
-          className="h-full"
+          title="SIGN IN TO CONNECT A COMPUTER."
+          body="A computer has to belong to an account before it can install anything."
+          action={
+            <Link href="/login?next=/devices">
+              <Button pixel className="text-[10px]">
+                SIGN IN
+              </Button>
+            </Link>
+          }
         />
-
-        <Panel className="p-5">
-          <PanelLabel className="mb-4">Step 1 — run this on your computer</PanelLabel>
-          <Terminal
-            title="terminal"
-            caret={false}
-            lines={[
-              { text: "$ npx lazy-skill connect", tone: "ink" },
-              { text: "" },
-              { text: "> initializing laziness.exe" },
-              { text: "> generating connection portal..." },
-              { text: "> waiting for scan... 💤", tone: "accent" },
-            ]}
+      ) : devices.length === 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <EmptyState
+            expression="waiting"
+            title="YOUR COMPUTER IS LONELY."
+            body="Connect it. Pairing takes about six seconds."
+            className="h-full"
+            action={
+              <Link href="/pair">
+                <Button pixel className="text-[10px]">
+                  CONNECT COMPUTER
+                </Button>
+              </Link>
+            }
           />
-          <p className="mt-4 text-[12px] leading-relaxed text-faint">
-            Step 2 — scan the QR it prints with this app. The CLI is shipped in
-            Phase 5; this page will pair with it then.
-          </p>
-        </Panel>
-      </div>
+
+          <Panel className="p-5">
+            <PanelLabel className="mb-4">Step 1 — run this on your computer</PanelLabel>
+            <Terminal
+              title="terminal"
+              caret={false}
+              lines={[
+                { text: "$ npx lazy-skill connect", tone: "ink" },
+                { text: "" },
+                { text: "> initializing laziness.exe" },
+                { text: "> generating connection portal..." },
+                { text: "> waiting for scan...", tone: "accent" },
+              ]}
+            />
+            <p className="mt-4 text-[12px] leading-relaxed text-faint">
+              Step 2 — scan the QR it prints with this app.
+            </p>
+          </Panel>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <ReconnectHint />
+            <Link href="/pair">
+              <Button size="sm">Connect another</Button>
+            </Link>
+          </div>
+          <DeviceList devices={devices} />
+        </>
+      )}
     </div>
   );
 }

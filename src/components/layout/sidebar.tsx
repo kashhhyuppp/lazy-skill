@@ -46,7 +46,7 @@ export function Sidebar() {
       {/* Device status — the bridge to the CLI. Wired up in Phase 6. */}
       <div className="border-t border-line-soft p-3">
         <Link
-          href="/devices"
+          href="/pair"
           className="rounded-lg block border border-line bg-surface/70 p-3 transition-colors hover:border-accent/50"
         >
           <div className="flex items-center gap-3">

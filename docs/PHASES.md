@@ -7,7 +7,7 @@
 | 3 | Supabase, auth, favorites, collections, profiles | **code complete** — needs a Supabase project |
 | 4 | XP, levels, streaks, achievements, quests, leaderboard | **code complete** — needs the Supabase project |
 | 5 | CLI, QR, pairing, device auth | **code complete** — needs Supabase + PAIRING_SECRET to run live |
-| 6 | Web QR scanner, pairing flow, device management, realtime | not started |
+| 6 | Web QR scanner, pairing flow, device management, realtime | **code complete** — needs Supabase + PAIRING_SECRET to run live |
 | 7 | Claude / Codex / Cursor adapters | not started |
 | 8 | Remote installation, progress, history | not started |
 | 9 | Polish, PWA, SEO, performance, security review | not started |
@@ -240,6 +240,65 @@ evidence for each detection so it can be audited.
 `lazy-skill install` is deliberately not implemented: rather than shell out to
 something unvalidated, it says local install is not wired up yet and points at
 the upstream installer that works today. Remote install is Phase 8.
+
+## Phase 6 — scanning and device management
+
+### Two ways in, one code path
+
+A QR scanned with the phone's own camera opens `/pair#<code>`; scanning inside
+the app decodes to the same value. Both funnel through `extractCode`, as does
+manual entry, so there is exactly one definition of what a code looks like —
+shared with the server's validator rather than duplicated.
+
+The fragment is stripped from the address bar as soon as it is read, so a
+pairing code never lingers in history or gets shared by accident. Sign-in
+drops the fragment, so a code arriving before authentication is stashed in
+`sessionStorage` and resumed afterwards.
+
+`/pair` is `noindex`.
+
+### extractCode is an untrusted-input boundary
+
+It parses whatever a camera happened to decode, so it recognises or rejects
+and never repairs. Notably it refuses non-http(s) schemes outright: a scanned
+`javascript:`, `data:` or `file:` URL carrying a valid-looking fragment is
+rejected rather than mined for a code.
+
+`pnpm test` covers 11 cases, weighted toward what it must refuse: dangerous
+schemes, wrong lengths at both boundaries, characters outside base64url,
+internal whitespace (a mis-scan, never healed) versus surrounding whitespace
+(trimmed, because people paste), 100k-character input, and non-string values.
+
+### Camera states are not interchangeable
+
+Permission denied, no camera, no camera API, and an insecure origin each get
+their own explanation and their own next step (§11). Telling someone to "try
+again" when their browser can never work is worse than saying nothing, so only
+the recoverable states offer a retry.
+
+Capability is read as derived state rather than written from an effect: it
+cannot change during a session, and mirroring it into state would cost an
+extra render on every mount.
+
+Decoding prefers the platform's `BarcodeDetector` where it exists
+(hardware-backed on Android/Chrome) and lazily loads jsQR otherwise, which is
+what iOS Safari needs — so browsers with the native API never download it.
+Frames are downscaled to 640px before decoding; decoding full-resolution
+frames every tick drains phone batteries for no accuracy gain. If the native
+detector starts throwing mid-scan it is dropped in favour of jsQR rather than
+killing the scan.
+
+### Devices
+
+Real device list with online state derived from the CLI's heartbeat, inline
+rename, and disconnect. Revoked devices are filtered out in the query rather
+than in the UI, so a disconnected machine can never render as connected.
+Revoking marks rather than deletes, so installation history survives and the
+token stops authenticating immediately.
+
+Live updates come from a Supabase Realtime subscription on `devices`, which
+the CLI already heartbeats into — so a machine coming online or a newly
+installed agent appears without polling.
 
 ## Phase 1 notes for later phases
 
