@@ -77,7 +77,17 @@ export function forgetEverything(): void {
   }
 }
 
+/**
+ * Where the CLI pairs and polls by default.
+ *
+ * The deployment's own hostname, not a domain we do not own. A published CLI
+ * pointing at an unregistered domain would send every user's pairing attempt
+ * nowhere — or, worse, to whoever registers it later. Override with
+ * LAZY_SKILL_API_URL when running against a local server.
+ */
+export const DEFAULT_API_URL = "https://lazy-skill.vercel.app";
+
 export function apiBaseUrl(): string {
   const configured = readConfig().apiUrl ?? process.env.LAZY_SKILL_API_URL;
-  return (configured || "https://lazyskill.com").replace(/\/$/, "");
+  return (configured || DEFAULT_API_URL).replace(/\/$/, "");
 }

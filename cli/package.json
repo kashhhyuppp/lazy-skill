@@ -1,13 +1,15 @@
 {
   "name": "lazy-skill",
   "version": "0.1.0",
-  "description": "Found a skill? Don't hunt for it. Install it from your phone.",
+  "description": "Found an AI skill while scrolling? Install it to your computer from your phone.",
   "type": "module",
   "bin": {
     "lazy-skill": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18"
@@ -18,15 +20,20 @@
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node test/qr.test.mjs && node test/install-plan.test.mjs && node test/stage.test.mjs",
-    "pretest": "tsc -p tsconfig.json"
+    "pretest": "tsc -p tsconfig.json",
+    "prepublishOnly": "rm -rf dist && tsc -p tsconfig.json"
   },
   "keywords": [
     "ai",
     "skills",
+    "agent-skills",
     "claude",
+    "claude-code",
     "codex",
     "cursor",
-    "cli"
+    "cli",
+    "qr",
+    "developer-tools"
   ],
   "license": "MIT",
   "dependencies": {
@@ -36,5 +43,18 @@
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",
     "typescript": "^5"
+  },
+  "homepage": "https://github.com/kashhhyuppp/lazy-skill#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kashhhyuppp/lazy-skill.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/kashhhyuppp/lazy-skill/issues"
+  },
+  "author": "kashhhyuppp",
+  "publishConfig": {
+    "access": "public"
   }
 }

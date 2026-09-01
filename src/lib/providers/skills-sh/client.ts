@@ -29,15 +29,19 @@ export class SkillsApiError extends Error {
 }
 
 /**
- * True when the app is configured to talk to the live registry.
+ * True when the app might be able to reach the live registry.
  *
- * The OIDC token is injected by Vercel at runtime, and locally by
- * `vercel env pull`. When it is absent we do not attempt the call at all —
- * the provider registry falls back to sample data instead of surfacing a
- * wall of 401s.
+ * Locally the token arrives in .env.local via `vercel env pull`. In a Vercel
+ * deployment it is minted per request rather than sitting in the process
+ * environment, so checking only for the variable reports "unconfigured" in
+ * exactly the place the registry does work — and the app quietly serves
+ * sample data in production.
+ *
+ * So: treat running on Vercel as configured, and let the provider degrade at
+ * call time if the token turns out not to be obtainable.
  */
 export function isConfigured(): boolean {
-  return Boolean(process.env.VERCEL_OIDC_TOKEN);
+  return Boolean(process.env.VERCEL_OIDC_TOKEN) || process.env.VERCEL === "1";
 }
 
 async function authToken(): Promise<string> {

@@ -2,6 +2,7 @@ import "server-only";
 import type { SkillsProvider } from "./types";
 import { DemoSkillsProvider } from "./demo-provider";
 import { SkillsShProvider } from "./skills-sh/provider";
+import { FallbackSkillsProvider } from "./fallback-provider";
 import { isConfigured } from "./skills-sh/client";
 
 export type { SkillsProvider, ProviderCapabilities } from "./types";
@@ -18,7 +19,8 @@ let cached: SkillsProvider | null = null;
  */
 export function getSkillsProvider(): SkillsProvider {
   if (!cached) {
-    cached = isConfigured() ? new SkillsShProvider() : new DemoSkillsProvider();
+    const demo = new DemoSkillsProvider();
+    cached = isConfigured() ? new FallbackSkillsProvider(new SkillsShProvider(), demo) : demo;
   }
   return cached;
 }
