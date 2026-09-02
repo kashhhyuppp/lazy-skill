@@ -1,5 +1,5 @@
 import { THEMES, THEME_IDS, rgb, style, type ThemeId } from "./theme.js";
-import { banner, mascot } from "./banner.js";
+import { banner } from "./banner.js";
 import { pointer, select } from "./select.js";
 
 /**
@@ -15,7 +15,6 @@ export async function chooseTheme(version: string): Promise<ThemeId> {
   const rows = (index: number): string[] => {
     const id = THEME_IDS[index];
     const theme = THEMES[id];
-    const bit = mascot(theme, true);
 
     const out: string[] = [""];
     out.push(...banner(theme, version));
@@ -32,8 +31,7 @@ export async function chooseTheme(version: string): Promise<ThemeId> {
       const padded = t.label.padEnd(14);
       const label = active ? style.bold(padded) : style.gray(padded);
       // The mascot sits beside the list, aligned to its middle rows.
-      const beside = i >= 1 && i <= 6 ? "  " + bit[i - 1] : "";
-      out.push(`  ${pointer(active)} ${swatch}  ${label}${beside}`);
+      out.push(`  ${pointer(active)} ${swatch}  ${label}`);
     });
 
     out.push("");

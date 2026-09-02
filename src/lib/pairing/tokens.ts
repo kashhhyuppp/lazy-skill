@@ -25,9 +25,16 @@ function pepper(): string {
   return secret;
 }
 
-/** 32 bytes of CSPRNG entropy, URL-safe so it survives a QR and a query string. */
+/**
+ * 16 bytes of CSPRNG entropy, URL-safe so it survives a QR and a query string.
+ *
+ * Sized against the QR, not against a habit: every character lands in a code
+ * displayed on a terminal, and 32 bytes pushed it to 37 modules a side, which
+ * is a wall of pixels on a large font. 128 bits is far beyond guessable for a
+ * value that is single-use and expires in two minutes.
+ */
 export function generateCode(): string {
-  return randomBytes(32).toString("base64url");
+  return randomBytes(16).toString("base64url");
 }
 
 export function generateDeviceToken(): string {

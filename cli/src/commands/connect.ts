@@ -6,11 +6,11 @@ import { THEMES, style, type Theme } from "../ui/theme.js";
 import { boxWidth, visibleWidth } from "../ui/layout.js";
 import { renderQr } from "../ui/qr.js";
 import { blank, box, centre, fail, hint, line, muted, ok, status } from "../ui/layout.js";
-import { banner, mascot } from "../ui/banner.js";
+import { banner } from "../ui/banner.js";
 import { messages } from "../ui/messages.js";
 import { Spinner } from "../ui/spinner.js";
 
-const VERSION = "0.6.0";
+const VERSION = "0.7.0";
 
 interface StartResponse {
   code: string;
@@ -98,14 +98,7 @@ export async function connectCommand(options: {
   const width = plate.length ? visibleWidth(plate[0]) + 4 : boxWidth();
   box(theme, plate.map((row) => centre(row, width)), width);
 
-  // Bit sits under the code rather than over it: anything overlapping the
-  // module area would cost scan reliability for decoration.
-  blank();
-  const bit = mascot(theme, false);
-  for (let i = 0; i < bit.length; i++) {
-    const caption = i === 2 ? `  ${style.gray("waiting for your phone")}` : "";
-    console.log(`  ${centre(bit[i], width - 18)}${caption}`);
-  }
+
 
   blank();
   muted(session.pairUrl);

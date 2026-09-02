@@ -6,9 +6,9 @@
  * decode — so this only ever recognises or rejects. It never repairs.
  */
 
-/** 32 random bytes, base64url encoded, is 43 characters. The range allows
- *  for a future change of length without loosening the character class. */
-export const CODE_PATTERN = /^[A-Za-z0-9_-]{40,64}$/;
+/** 16 random bytes base64url-encode to 22 characters. The range spans that
+ *  and the older 32-byte form, so codes issued before the change still pair. */
+export const CODE_PATTERN = /^[A-Za-z0-9_-]{20,64}$/;
 
 export function isCodeShaped(value: unknown): value is string {
   return typeof value === "string" && CODE_PATTERN.test(value);

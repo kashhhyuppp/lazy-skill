@@ -1,6 +1,6 @@
 import { readConfig, updateConfig } from "../lib/config.js";
 import { THEMES, THEME_IDS, rgb, style } from "../ui/theme.js";
-import { banner, mascot } from "../ui/banner.js";
+import { banner } from "../ui/banner.js";
 import { pointer, select } from "../ui/select.js";
 import { blank, muted, ok } from "../ui/layout.js";
 
@@ -33,8 +33,7 @@ export async function themeCommand(requested: string | undefined, version: strin
     initial: THEME_IDS.indexOf(current),
     render: (index) => {
       const theme = THEMES[THEME_IDS[index]];
-      const bit = mascot(theme, true);
-
+  
       const out: string[] = [""];
       out.push(...banner(theme, version));
       out.push("");
@@ -47,8 +46,7 @@ export async function themeCommand(requested: string | undefined, version: strin
       // padding a coloured string leaves the column ragged.
       const padded = t.label.padEnd(14);
       const label = active ? style.bold(padded) : style.gray(padded);
-        const beside = i >= 1 && i <= 6 ? "  " + bit[i - 1] : "";
-        out.push(`  ${pointer(active)} ${mark} ${rgb(t.accent, "████")}  ${label}${beside}`);
+          out.push(`  ${pointer(active)} ${mark} ${rgb(t.accent, "████")}  ${label}`);
       });
 
       out.push("");

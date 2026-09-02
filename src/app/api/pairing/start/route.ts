@@ -80,10 +80,14 @@ export async function POST(request: Request) {
 
   // The code travels in the URL fragment: fragments are not sent to servers
   // and stay out of proxy logs and Referer headers.
+  //
+  // The short /p path is deliberate — every character in this URL becomes QR
+  // modules, and the code is displayed on a terminal where a denser symbol is
+  // a wall of pixels. /p renders the same page.
   return NextResponse.json({
     code,
     expiresAt: expiresAt.toISOString(),
     expiresInMs: PAIRING_TTL_MS,
-    pairUrl: `${appUrl.replace(/\/$/, "")}/pair#${code}`,
+    pairUrl: `${appUrl.replace(/\/$/, "")}/p#${code}`,
   });
 }

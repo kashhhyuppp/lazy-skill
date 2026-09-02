@@ -13,12 +13,13 @@ const check = (label: string, fn: () => void) => {
   console.log("  ok  " + label);
 };
 
-const realCode = () => randomBytes(32).toString("base64url");
+/** Matches what the server now issues: 16 bytes, 22 characters. */
+const realCode = () => randomBytes(16).toString("base64url");
 
 check("accepts a bare code", () => {
   for (let i = 0; i < 50; i++) {
     const code = realCode();
-    assert.equal(code.length, 43);
+    assert.equal(code.length, 22);
     assert.equal(extractCode(code), code);
     assert.equal(isCodeShaped(code), true);
   }
@@ -67,14 +68,21 @@ check("rejects malformed and empty input", () => {
 });
 
 check("rejects codes of the wrong length", () => {
-  assert.equal(extractCode("a".repeat(39)), null, "39 chars is too short");
+  assert.equal(extractCode("a".repeat(19)), null, "19 chars is too short");
   assert.equal(extractCode("a".repeat(65)), null, "65 chars is too long");
-  assert.equal(extractCode("a".repeat(40)), "a".repeat(40), "40 is the floor");
+  assert.equal(extractCode("a".repeat(20)), "a".repeat(20), "20 is the floor");
   assert.equal(extractCode("a".repeat(64)), "a".repeat(64), "64 is the ceiling");
 });
 
+check("still accepts the older 32-byte codes", () => {
+  // A code issued before the length change must keep working until it expires.
+  const legacy = randomBytes(32).toString("base64url");
+  assert.equal(legacy.length, 43);
+  assert.equal(extractCode(legacy), legacy);
+});
+
 check("rejects characters outside base64url", () => {
-  const base = "a".repeat(42);
+  const base = "a".repeat(30);
   // Whitespace is excluded here on purpose: it is trimmed, not rejected.
   const illegal = ["+", "/", "=", "!", "%", "<", ".", ":", "#"];
   for (const ch of illegal) {
