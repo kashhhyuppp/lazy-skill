@@ -1,55 +1,49 @@
-import { createInterface } from "node:readline/promises";
 import { THEMES, THEME_IDS, rgb, style, type ThemeId } from "./theme.js";
-import { blank, box, centre, hint, line, muted, welcome } from "./layout.js";
+import { banner, mascot } from "./banner.js";
+import { pointer, select } from "./select.js";
 
 /**
- * First-run theme choice.
+ * First-run theme choice, with live preview.
  *
- * Asked once, before anything else, because the answer applies to both halves
- * of the product: the terminal colours itself, and the phone adopts the same
- * theme the moment it pairs. Choosing later in two places would be two
- * chances to end up mismatched.
+ * The whole screen — wordmark, mascot, pointer — repaints in whichever theme
+ * is under the cursor, so the choice is made by looking rather than by
+ * imagining. It is asked once because it applies to both halves of the
+ * product: the terminal colours itself, and the phone adopts the same theme
+ * the moment it pairs.
  */
-export async function chooseTheme(): Promise<ThemeId> {
-  const fallback: ThemeId = "cyber-purple";
-  const theme = THEMES[fallback];
+export async function chooseTheme(version: string): Promise<ThemeId> {
+  const rows = (index: number): string[] => {
+    const id = THEME_IDS[index];
+    const theme = THEMES[id];
+    const bit = mascot(theme, true);
 
-  blank();
-  welcome(theme, "Welcome to Lazy Skill!");
-  blank();
-  hint("Pick a colour. Your phone will match it when you connect.");
-  blank();
+    const out: string[] = [""];
+    out.push(...banner(theme, version));
+    out.push("");
+    out.push(`  ${style.gray("Pick a colour. Your phone will match it when you connect.")}`);
+    out.push("");
 
-  box(
-    theme,
-    THEME_IDS.map((id, i) => {
-      const t = THEMES[id];
-      return `${style.gray(String(i + 1))}  ${rgb(t.accent, "████")}  ${t.label}`;
-    })
-  );
+    THEME_IDS.forEach((themeId, i) => {
+      const t = THEMES[themeId];
+      const active = i === index;
+      const swatch = rgb(t.accent, "████");
+      // Pad before colouring: padEnd counts escape codes as characters, so
+      // padding a coloured string leaves the column ragged.
+      const padded = t.label.padEnd(14);
+      const label = active ? style.bold(padded) : style.gray(padded);
+      // The mascot sits beside the list, aligned to its middle rows.
+      const beside = i >= 1 && i <= 5 ? "  " + bit[i - 1] : "";
+      out.push(`  ${pointer(active)} ${swatch}  ${label}${beside}`);
+    });
 
-  blank();
+    out.push("");
+    out.push(`  ${style.gray("↑ ↓ to move · enter to choose")}`);
+    out.push("");
+    return out;
+  };
 
-  // A pipe or a CI job has nobody to ask.
-  if (!process.stdin.isTTY) {
-    muted("Not a terminal — using Purple Night. Change it with: lazy-skill theme");
-    blank();
-    return fallback;
-  }
-
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const answer = (await rl.question(`  Number ${style.gray("(enter for 1)")} `)).trim();
-    if (!answer) return fallback;
-
-    const index = Number(answer) - 1;
-    if (!Number.isInteger(index) || index < 0 || index >= THEME_IDS.length) {
-      // Not worth a re-prompt: the choice is cosmetic and changeable.
-      line(style.gray("  Not one of those — using Purple Night."));
-      return fallback;
-    }
-    return THEME_IDS[index];
-  } finally {
-    rl.close();
-  }
+  return select<ThemeId>({
+    choices: THEME_IDS.map((id) => ({ value: id, label: THEMES[id].label })),
+    render: rows,
+  });
 }

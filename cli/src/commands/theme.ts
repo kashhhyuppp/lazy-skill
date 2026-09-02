@@ -1,15 +1,15 @@
-import { createInterface } from "node:readline/promises";
 import { readConfig, updateConfig } from "../lib/config.js";
 import { THEMES, THEME_IDS, rgb, style } from "../ui/theme.js";
-import { blank, box, muted, ok, welcome } from "../ui/layout.js";
+import { banner, mascot } from "../ui/banner.js";
+import { pointer, select } from "../ui/select.js";
+import { blank, muted, ok } from "../ui/layout.js";
 
 /**
  * Theme picker. The choice is stored locally and travels with the next
  * pairing, so the phone ends up on the same colour.
  */
-export async function themeCommand(requested?: string): Promise<number> {
+export async function themeCommand(requested: string | undefined, version: string): Promise<number> {
   const current = readConfig().theme;
-  const theme = THEMES[current];
 
   if (requested) {
     const match = THEME_IDS.find((id) => id === requested);
@@ -28,48 +28,39 @@ export async function themeCommand(requested?: string): Promise<number> {
     return 0;
   }
 
+  const chosen = await select<(typeof THEME_IDS)[number]>({
+    choices: THEME_IDS.map((id) => ({ value: id, label: THEMES[id].label })),
+    initial: THEME_IDS.indexOf(current),
+    render: (index) => {
+      const theme = THEMES[THEME_IDS[index]];
+      const bit = mascot(theme, true);
+
+      const out: string[] = [""];
+      out.push(...banner(theme, version));
+      out.push("");
+
+      THEME_IDS.forEach((themeId, i) => {
+        const t = THEMES[themeId];
+        const active = i === index;
+        const mark = themeId === current ? style.green("●") : style.gray("○");
+        // Pad before colouring: padEnd counts escape codes as characters, so
+      // padding a coloured string leaves the column ragged.
+      const padded = t.label.padEnd(14);
+      const label = active ? style.bold(padded) : style.gray(padded);
+        const beside = i >= 1 && i <= 5 ? "  " + bit[i - 1] : "";
+        out.push(`  ${pointer(active)} ${mark} ${rgb(t.accent, "████")}  ${label}${beside}`);
+      });
+
+      out.push("");
+      out.push(`  ${style.gray("↑ ↓ to move · enter to choose")}`);
+      out.push("");
+      return out;
+    },
+  });
+
+  updateConfig({ theme: chosen });
+  ok(`Theme set to ${rgb(THEMES[chosen].accent, THEMES[chosen].label)}.`);
+  muted("Connect again to carry it to your phone.");
   blank();
-  welcome(theme, "Pick a colour");
-  blank();
-
-  box(
-    theme,
-    THEME_IDS.map((id, i) => {
-      const t = THEMES[id];
-      const marker = id === current ? style.green("●") : style.gray("○");
-      return `${marker} ${style.gray(String(i + 1))}  ${rgb(t.accent, "████")}  ${t.label}`;
-    })
-  );
-
-  blank();
-
-  if (!process.stdin.isTTY) {
-    muted("Not a terminal — pass an id, e.g. lazy-skill theme matrix-green");
-    blank();
-    return 0;
-  }
-
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const answer = (await rl.question(`  Number ${style.gray("(enter to keep)")} `)).trim();
-    if (!answer) return 0;
-
-    const index = Number(answer) - 1;
-    if (!Number.isInteger(index) || index < 0 || index >= THEME_IDS.length) {
-      blank();
-      muted("Not one of those. Theme unchanged.");
-      blank();
-      return 1;
-    }
-
-    const chosen = THEME_IDS[index];
-    updateConfig({ theme: chosen });
-    blank();
-    ok(`Theme set to ${rgb(THEMES[chosen].accent, THEMES[chosen].label)}.`);
-    muted("Connect again to carry it to your phone.");
-    blank();
-    return 0;
-  } finally {
-    rl.close();
-  }
+  return 0;
 }

@@ -11,7 +11,7 @@ import { themeCommand } from "./commands/theme.js";
 import { listenCommand } from "./commands/listen.js";
 import { warnIfOutdated } from "./lib/version-check.js";
 
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 
 function help(): void {
   const theme = THEMES[readConfig().theme];
@@ -74,7 +74,7 @@ async function main(): Promise<number> {
   // when it pairs a moment later. Only on a genuinely first run, and never
   // for `theme`, which asks on its own.
   if (isFirstRun() && command !== "theme") {
-    updateConfig({ theme: await chooseTheme() });
+    updateConfig({ theme: await chooseTheme(VERSION) });
   }
 
   if (longRunning) await warnIfOutdated(VERSION, THEMES[readConfig().theme]);
@@ -100,7 +100,7 @@ async function main(): Promise<number> {
     case "skills":
       return skillsCommand();
     case "theme":
-      return themeCommand(positional[1]);
+      return themeCommand(positional[1], VERSION);
     case "install": {
       const agentFlag = argv.find((a) => a.startsWith("--agent="))?.split("=")[1];
       const yes = flags.has("-y") || flags.has("--yes");

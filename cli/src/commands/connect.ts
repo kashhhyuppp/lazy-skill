@@ -5,9 +5,12 @@ import { detectAgents, type AgentStatus } from "../adapters/index.js";
 import { THEMES, style, type Theme } from "../ui/theme.js";
 import { boxWidth, visibleWidth } from "../ui/layout.js";
 import { renderQr } from "../ui/qr.js";
-import { blank, box, centre, fail, hint, line, muted, ok, status, welcome } from "../ui/layout.js";
+import { blank, box, centre, fail, hint, line, muted, ok, status } from "../ui/layout.js";
+import { banner, mascot } from "../ui/banner.js";
 import { messages } from "../ui/messages.js";
 import { Spinner } from "../ui/spinner.js";
+
+const VERSION = "0.5.0";
 
 interface StartResponse {
   code: string;
@@ -45,7 +48,7 @@ export async function connectCommand(options: {
   const theme: Theme = THEMES[config.theme];
 
   blank();
-  welcome(theme, "Welcome to Lazy Skill!");
+  for (const row of banner(theme, VERSION)) console.log(row);
   blank();
   hint("See it. Search it. Install it.");
   blank();
@@ -90,10 +93,19 @@ export async function connectCommand(options: {
   blank();
 
   // The QR is the one thing to act on, so it gets the box. Its own quiet zone
-  // sits inside the border, untouched.
+  // sits inside the border, untouched — nothing is drawn over the modules.
   const plate = await renderQr(session.pairUrl);
   const width = plate.length ? visibleWidth(plate[0]) + 4 : boxWidth();
   box(theme, plate.map((row) => centre(row, width)), width);
+
+  // Bit sits under the code rather than over it: anything overlapping the
+  // module area would cost scan reliability for decoration.
+  blank();
+  const bit = mascot(theme, false);
+  for (let i = 0; i < bit.length; i++) {
+    const caption = i === 2 ? `  ${style.gray("waiting for your phone")}` : "";
+    console.log(`  ${centre(bit[i], width - 18)}${caption}`);
+  }
 
   blank();
   muted(session.pairUrl);
