@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Clock, Flame } from "lucide-react";
+import { ChevronDown, Clock, Flame, SlidersHorizontal } from "lucide-react";
 import type { AgentId, CategoryId, SkillPage, SkillView } from "@/types/skill";
 import type { ProviderInfo } from "@/lib/providers";
 import { AGENTS, AGENT_IDS, CATEGORY_LIST } from "@/types/skill";
@@ -69,6 +69,12 @@ export function ExploreClient({
     getRecentServerSnapshot
   );
 
+  // Three rows of chips before a single result is a wall on a phone. They
+  // collapse behind a toggle that says how many are active, so the filters are
+  // still one tap away without owning the screen.
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const activeFilters = (category ? 1 : 0) + (agent ? 1 : 0) + (view !== "trending" ? 1 : 0);
+
   const untouched = !q && view === "trending" && !category && !agent;
   const { data, loading, loadingMore, error, loadMore } = useSkillSearch(
     { q, view, category, agent },
@@ -96,6 +102,7 @@ export function ExploreClient({
         value={q}
         onChange={setQ}
         onSubmit={runSearch}
+        placeholder="Search skills..."
         size="lg"
         className="max-w-2xl"
       />
@@ -128,7 +135,26 @@ export function ExploreClient({
       )}
 
       {/* filters */}
-      <div className="space-y-3 border-y border-line-soft py-4">
+      <div className="border-y border-line-soft py-3">
+        <button
+          onClick={() => setFiltersOpen((open) => !open)}
+          aria-expanded={filtersOpen}
+          className="flex w-full items-center gap-2 text-[13px] text-dim transition-colors hover:text-ink sm:hidden"
+        >
+          <SlidersHorizontal size={14} />
+          Filters
+          {activeFilters > 0 && (
+            <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] text-accent-hi">
+              {activeFilters}
+            </span>
+          )}
+          <ChevronDown
+            size={14}
+            className={cn("ml-auto transition-transform", filtersOpen && "rotate-180")}
+          />
+        </button>
+
+        <div className={cn("space-y-3 sm:block", filtersOpen ? "mt-3 block" : "hidden")}>
         {!q && (
           <div className="flex gap-2">
             {VIEWS.map((v) => (
@@ -140,7 +166,7 @@ export function ExploreClient({
         )}
 
         {provider.capabilities.categories && (
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:px-0">
+        <div className="flex flex-wrap gap-2">
           <Chip active={!category} onClick={() => setCategory(undefined)}>
             All
           </Chip>
@@ -180,6 +206,7 @@ export function ExploreClient({
           })}
         </div>
         )}
+        </div>
       </div>
 
       {data?.degraded ? (

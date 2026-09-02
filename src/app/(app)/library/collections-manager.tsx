@@ -119,7 +119,7 @@ export function CollectionsManager({ initial }: { initial: CollectionWithCount[]
                   onClick={() => remove(collection)}
                   disabled={pending}
                   aria-label={`Delete ${collection.name}`}
-                  className="ml-auto grid h-7 w-7 place-items-center rounded-md text-faint transition-colors hover:bg-fail/10 hover:text-fail disabled:opacity-50"
+                  className="ml-auto grid h-9 w-9 place-items-center rounded-md text-faint transition-colors hover:bg-fail/10 hover:text-fail disabled:opacity-50"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -129,5 +129,54 @@ export function CollectionsManager({ initial }: { initial: CollectionWithCount[]
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * Just the create action, for the empty state — which already explains what
+ * collections are and does not need the count or the list chrome.
+ */
+export function NewCollectionButton() {
+  const [name, setName] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const router = useRouter();
+
+  if (!open) {
+    return (
+      <Button pixel className="text-[10px]" onClick={() => setOpen(true)}>
+        NEW COLLECTION
+      </Button>
+    );
+  }
+
+  return (
+    <form
+      className="flex w-full max-w-xs flex-col gap-2.5"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setError(null);
+        const result = await createCollection({ name });
+        if (!result.ok) {
+          setError(result.error ?? "That didn't work.");
+          return;
+        }
+        router.refresh();
+      }}
+    >
+      <input
+        autoFocus
+        value={name}
+        maxLength={60}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="My AI Toolkit"
+        aria-label="Collection name"
+        className="h-10 w-full rounded-lg border border-line bg-surface-2 px-3 text-[14px] text-ink outline-none placeholder:text-faint focus:border-accent"
+      />
+      <Button type="submit" disabled={!name.trim()}>
+        Create
+      </Button>
+      {error && <p className="text-[12px] text-fail">{error}</p>}
+    </form>
   );
 }

@@ -62,7 +62,7 @@ export function SkillCard({ skill, compact = false }: { skill: Skill; compact?: 
                 aria-pressed={faved}
                 aria-label={faved ? "Remove from favorites" : "Add to favorites"}
                 className={cn(
-                  "relative z-10 -mr-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center transition-colors",
+                  "relative z-10 -mr-2 -mt-2 grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors",
                   faved ? "text-fail" : "text-faint hover:text-dim"
                 )}
               >

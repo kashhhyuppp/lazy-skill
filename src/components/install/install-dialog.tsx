@@ -1,14 +1,13 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Laptop, X } from "lucide-react";
 import type { DeviceRow } from "@/lib/db/devices";
 import { AGENTS, type AgentId } from "@/types/skill";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfig } from "@/lib/supabase/config";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mascot } from "@/components/brand/mascot";
 import { cn } from "@/lib/utils";
@@ -211,11 +210,9 @@ export function InstallDialog({
               <p className="mt-3 text-[13px] leading-relaxed text-dim">
                 Installs run on your own machine, so one has to be connected first.
               </p>
-              <Link href="/pair" className="mt-5 inline-block">
-                <Button pixel className="text-[10px]">
+              <ButtonLink href="/pair" pixel className="mt-5 inline-block text-[10px]">
                   CONNECT COMPUTER
-                </Button>
-              </Link>
+                </ButtonLink>
             </div>
           ) : (
             <>

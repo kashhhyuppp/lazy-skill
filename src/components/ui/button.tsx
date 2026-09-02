@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
@@ -57,5 +58,25 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   )
 );
 Button.displayName = "Button";
+
+/**
+ * A link that looks like a button.
+ *
+ * Wrapping a <Button> in a <Link> produces <a><button></button></a>, which is
+ * invalid: nested interactive elements. Browsers disagree about which one
+ * receives the click, so some of those buttons navigated and some did nothing
+ * at all — and screen readers announce two controls where there is one.
+ */
+export const ButtonLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentProps<typeof Link> & VariantProps<typeof button> & { notched?: boolean }
+>(({ className, variant, size, pixel, notched = true, ...props }, ref) => (
+  <Link
+    ref={ref}
+    className={cn(button({ variant, size, pixel }), notched && "rounded-lg", className)}
+    {...props}
+  />
+));
+ButtonLink.displayName = "ButtonLink";
 
 export { button as buttonVariants };

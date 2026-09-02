@@ -1,14 +1,13 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Keyboard, QrCode } from "lucide-react";
 import { ScannerView } from "@/components/pairing/scanner-view";
 import { Mascot } from "@/components/brand/mascot";
 import { CommandStep } from "@/components/pairing/command-step";
 import { Panel } from "@/components/ui/panel";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme/theme-provider";
 import { isThemeId } from "@/lib/themes";
@@ -187,14 +186,10 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
 
         <p className="mt-6 text-[13px] text-dim">Now go be lazy.</p>
         <div className="mt-7 flex flex-wrap justify-center gap-2.5">
-          <Link href="/devices">
-            <Button pixel className="text-[10px]">
+          <ButtonLink href="/devices" pixel className="text-[10px]">
               MY DEVICES
-            </Button>
-          </Link>
-          <Link href="/explore">
-            <Button variant="secondary">Find skills</Button>
-          </Link>
+            </ButtonLink>
+          <ButtonLink href="/explore" variant="secondary">Find skills</ButtonLink>
         </div>
       </Panel>
     );
@@ -227,9 +222,7 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
             Try again
           </Button>
           {failure === "unauthenticated" && (
-            <Link href="/login?next=/pair">
-              <Button variant="secondary">Sign in</Button>
-            </Link>
+            <ButtonLink href="/login?next=/pair" variant="secondary">Sign in</ButtonLink>
           )}
         </div>
       </Panel>

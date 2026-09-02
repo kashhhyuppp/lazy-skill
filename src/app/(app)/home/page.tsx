@@ -7,7 +7,7 @@ import { StreakCalendar } from "@/components/gamification/streak-calendar";
 import { CATEGORY_LIST } from "@/types/skill";
 import { Panel, PanelLabel } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { PixelProgress } from "@/components/ui/progress";
 import { SkillCard } from "@/components/skills/skill-card";
 import { Mascot } from "@/components/brand/mascot";
@@ -110,11 +110,9 @@ export default async function HomePage() {
           <PanelLabel icon={<Monitor size={11} />}>Device</PanelLabel>
           <p className="mt-3 text-[14px] font-medium text-ink">Not connected</p>
           <p className="mt-1 text-[12px] text-dim">Your computer is lonely.</p>
-          <Link href="/devices" className="mt-4 block">
-            <Button size="sm" variant="outline" className="w-full">
+          <ButtonLink href="/devices" size="sm" variant="outline" className="mt-4 block w-full">
               Connect
-            </Button>
-          </Link>
+            </ButtonLink>
         </Panel>
       </div>
 
@@ -124,7 +122,7 @@ export default async function HomePage() {
           <PanelLabel icon={<TrendingUp size={12} />}>Trending now</PanelLabel>
           <Link
             href="/explore"
-            className="flex items-center gap-1 text-[12px] text-dim transition-colors hover:text-accent"
+            className="-my-2 flex min-h-9 items-center gap-1 px-1 text-[12px] text-dim transition-colors hover:text-accent"
           >
             See all <ArrowRight size={12} />
           </Link>

@@ -137,7 +137,7 @@ function DeviceCard({ device }: { device: DeviceRow }) {
               <button
                 onClick={() => setEditing(true)}
                 aria-label={`Rename ${device.name}`}
-                className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-faint transition-colors hover:bg-surface-2 hover:text-ink"
+                className="-m-1 grid h-8 w-8 shrink-0 place-items-center rounded-md text-faint transition-colors hover:bg-surface-2 hover:text-ink"
               >
                 <Pencil size={12} />
               </button>

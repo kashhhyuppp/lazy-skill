@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { ArrowRight, Download, Search, Smartphone, Sparkles, Zap } from "lucide-react";
 import { Logo, Wordmark } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Panel, PanelLabel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { Terminal } from "@/components/marketing/terminal";
@@ -39,16 +38,12 @@ export default function LandingPage() {
           <Logo />
           <nav className="ml-auto flex items-center gap-2">
             <ThemeSwitcher />
-            <Link href="/explore">
-              <Button variant="secondary" size="sm">
+            <ButtonLink href="/explore" variant="secondary" size="sm">
                 Explore
-              </Button>
-            </Link>
-            <Link href="/home" className="hidden sm:block">
-              <Button size="sm" pixel className="text-[10px]">
+              </ButtonLink>
+            <ButtonLink href="/home" size="sm" pixel className="hidden sm:block text-[10px]">
                 OPEN APP
-              </Button>
-            </Link>
+              </ButtonLink>
           </nav>
         </div>
       </header>
@@ -71,18 +66,14 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/explore">
-                <Button size="lg" pixel className="text-[11px]">
+              <ButtonLink href="/explore" size="lg" pixel className="text-[11px]">
                   EXPLORE SKILLS
                   <ArrowRight size={15} />
-                </Button>
-              </Link>
-              <Link href="/devices">
-                <Button size="lg" variant="outline">
+                </ButtonLink>
+              <ButtonLink href="/devices" size="lg" variant="outline">
                   <Zap size={15} />
                   Connect computer
-                </Button>
-              </Link>
+                </ButtonLink>
             </div>
 
             <p className="mt-7 font-mono text-[12px] text-faint">
@@ -220,11 +211,9 @@ export default function LandingPage() {
             Your computer was doing nothing anyway.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/home">
-              <Button size="lg" pixel className="text-[11px]">
+            <ButtonLink href="/home" size="lg" pixel className="text-[11px]">
                 OPEN LAZY SKILL
-              </Button>
-            </Link>
+              </ButtonLink>
           </div>
         </div>
       </section>

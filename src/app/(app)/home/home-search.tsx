@@ -14,6 +14,7 @@ export function HomeSearch() {
     <SearchBar
       value={q}
       onChange={setQ}
+      placeholder="Try browser automation"
       onSubmit={(term) => {
         const clean = term.trim();
         if (!clean) return;

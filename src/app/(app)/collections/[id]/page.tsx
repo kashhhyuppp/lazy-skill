@@ -6,7 +6,7 @@ import { getCollection } from "@/lib/db/collections";
 import { getUser } from "@/lib/supabase/server";
 import { Panel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { SkillSigil } from "@/components/skills/skill-sigil";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { CollectionItemActions } from "./item-actions";
@@ -73,11 +73,9 @@ export default async function CollectionPage({ params }: Props) {
           }
           action={
             isOwner ? (
-              <Link href="/explore">
-                <Button pixel className="text-[10px]">
+              <ButtonLink href="/explore" pixel className="text-[10px]">
                   FIND SKILLS
-                </Button>
-              </Link>
+                </ButtonLink>
             ) : undefined
           }
         />

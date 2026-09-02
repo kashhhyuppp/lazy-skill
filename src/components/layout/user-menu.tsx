@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export interface SessionUser {
@@ -33,11 +33,9 @@ export function UserMenu({ user }: { user: SessionUser | null }) {
 
   if (!user) {
     return (
-      <Link href="/login">
-        <Button size="sm" variant="secondary">
+      <ButtonLink href="/login" size="sm" variant="secondary">
           Sign in
-        </Button>
-      </Link>
+        </ButtonLink>
     );
   }
 

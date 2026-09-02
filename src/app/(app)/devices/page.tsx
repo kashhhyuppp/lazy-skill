@@ -1,10 +1,9 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { getUser } from "@/lib/supabase/server";
 import { listDevices } from "@/lib/db/devices";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Panel, PanelLabel } from "@/components/ui/panel";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Terminal } from "@/components/marketing/terminal";
 import { DeviceList, ReconnectHint } from "./device-list";
 
@@ -29,11 +28,9 @@ export default async function DevicesPage() {
           title="SIGN IN TO CONNECT A COMPUTER."
           body="A computer has to belong to an account before it can install anything."
           action={
-            <Link href="/login?next=/devices">
-              <Button pixel className="text-[10px]">
+            <ButtonLink href="/login?next=/devices" pixel className="text-[10px]">
                 SIGN IN
-              </Button>
-            </Link>
+              </ButtonLink>
           }
         />
       ) : devices.length === 0 ? (
@@ -44,11 +41,9 @@ export default async function DevicesPage() {
             body="Connect it. Pairing takes about six seconds."
             className="h-full"
             action={
-              <Link href="/pair">
-                <Button pixel className="text-[10px]">
+              <ButtonLink href="/pair" pixel className="text-[10px]">
                   CONNECT COMPUTER
-                </Button>
-              </Link>
+                </ButtonLink>
             }
           />
 
@@ -74,9 +69,7 @@ export default async function DevicesPage() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <ReconnectHint />
-            <Link href="/pair">
-              <Button size="sm">Connect another</Button>
-            </Link>
+            <ButtonLink href="/pair" size="sm">Connect another</ButtonLink>
           </div>
           <DeviceList devices={devices} />
         </>

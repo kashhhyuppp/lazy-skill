@@ -8,7 +8,7 @@ export function SearchBar({
   value,
   onChange,
   onSubmit,
-  placeholder = "What skill did you just see?",
+  placeholder = "Search skills...",
   autoFocus = false,
   size = "md",
   className,

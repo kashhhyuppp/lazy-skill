@@ -1,9 +1,8 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { getUser } from "@/lib/supabase/server";
 import { listFavorites } from "@/lib/db/favorites";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { FavoritesList } from "./favorites-list";
 
 export const metadata: Metadata = { title: "Favorites" };
@@ -20,11 +19,9 @@ export default async function FavoritesPage() {
           title="SIGN IN TO SAVE SKILLS."
           body="Favorites follow your account, so they are there on your phone too."
           action={
-            <Link href="/login?next=/favorites">
-              <Button pixel className="text-[10px]">
+            <ButtonLink href="/login?next=/favorites" pixel className="text-[10px]">
                 SIGN IN
-              </Button>
-            </Link>
+              </ButtonLink>
           }
         />
       </div>
@@ -49,11 +46,9 @@ export default async function FavoritesPage() {
           title="NOTHING HERE."
           body="You haven't been lazy enough yet. Go find a skill."
           action={
-            <Link href="/explore">
-              <Button pixel className="text-[10px]">
+            <ButtonLink href="/explore" pixel className="text-[10px]">
                 EXPLORE SKILLS
-              </Button>
-            </Link>
+              </ButtonLink>
           }
         />
       ) : (

@@ -6,7 +6,7 @@ import { levelForXp, rankTitle } from "@/lib/gamification/levels";
 import { Panel, PanelLabel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { compactNumber, cn } from "@/lib/utils";
 import { DemoLeaderboard } from "./demo-board";
 
@@ -64,11 +64,9 @@ export default async function LeaderboardPage({ searchParams }: Props) {
             title="NOBODY ON THE BOARD YET."
             body="No real player has earned XP in this window. Favorite a skill and you are instantly first."
             action={
-              <Link href="/explore">
-                <Button pixel className="text-[10px]">
+              <ButtonLink href="/explore" pixel className="text-[10px]">
                   EARN SOME XP
-                </Button>
-              </Link>
+                </ButtonLink>
             }
           />
           <DemoLeaderboard />

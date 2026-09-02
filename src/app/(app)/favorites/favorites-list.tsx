@@ -61,7 +61,7 @@ export function FavoritesList({ rows }: { rows: FavoriteRow[] }) {
                     toggle({ id: row.skill_id, name: row.skill_name, source: row.skill_source })
                   }
                   aria-label={`Remove ${row.skill_name} from favorites`}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-fail transition-colors hover:bg-fail/10"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-fail transition-colors hover:bg-fail/10"
                 >
                   <Heart size={15} fill="currentColor" />
                 </button>

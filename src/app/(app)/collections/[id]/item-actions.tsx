@@ -25,7 +25,7 @@ export function CollectionItemActions({
         })
       }
       aria-label="Remove from collection"
-      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-faint transition-colors hover:bg-fail/10 hover:text-fail disabled:opacity-50"
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-faint transition-colors hover:bg-fail/10 hover:text-fail disabled:opacity-50"
     >
       <X size={15} />
     </button>

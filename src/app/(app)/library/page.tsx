@@ -1,12 +1,11 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { getUser } from "@/lib/supabase/server";
 import { listCollections } from "@/lib/db/collections";
 import { listInstallations } from "@/lib/db/installations";
 import { InstallHistory } from "./install-history";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { Button } from "@/components/ui/button";
-import { CollectionsManager } from "./collections-manager";
+import { ButtonLink } from "@/components/ui/button";
+import { CollectionsManager, NewCollectionButton } from "./collections-manager";
 
 export const metadata: Metadata = { title: "Library" };
 
@@ -22,11 +21,9 @@ export default async function LibraryPage() {
           title="SIGN IN TO BUILD COLLECTIONS."
           body="Group skills into stacks you can share."
           action={
-            <Link href="/login?next=/library">
-              <Button pixel className="text-[10px]">
+            <ButtonLink href="/login?next=/library" pixel className="text-[10px]">
                 SIGN IN
-              </Button>
-            </Link>
+              </ButtonLink>
           }
         />
       </div>
@@ -45,12 +42,15 @@ export default async function LibraryPage() {
         <p className="mt-2 text-[14px] text-dim">Your collections of skills.</p>
       </div>
 
+      {/* The manager renders its own count and New button, so embedding it
+          inside the empty state produced "0 collections" next to a button
+          inside a card that already said the same thing. */}
       {collections.length === 0 ? (
         <EmptyState
           expression="curious"
           title="YOUR SKILL PILE IS EMPTY."
-          body="Start collecting."
-          action={<CollectionsManager initial={[]} />}
+          body="Group skills into stacks you can share."
+          action={<NewCollectionButton />}
         />
       ) : (
         <CollectionsManager initial={collections} />

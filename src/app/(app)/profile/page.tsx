@@ -4,7 +4,7 @@ import { Flame, Trophy } from "lucide-react";
 import { getUser } from "@/lib/supabase/server";
 import { listFavorites } from "@/lib/db/favorites";
 import { listCollections } from "@/lib/db/collections";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Panel, PanelLabel } from "@/components/ui/panel";
 import { PixelProgress } from "@/components/ui/progress";
 import { Mascot } from "@/components/brand/mascot";
@@ -58,9 +58,7 @@ export default async function ProfilePage() {
             </div>
           </div>
           {!user && (
-            <Link href="/login?next=/profile" className="shrink-0">
-              <Button size="sm">Sign in</Button>
-            </Link>
+            <ButtonLink href="/login?next=/profile" size="sm" className="shrink-0">Sign in</ButtonLink>
           )}
         </div>
 

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getProviderInfo, getSkillsProvider } from "@/lib/providers";
@@ -6,7 +5,7 @@ import { CATEGORIES, CATEGORY_IDS, type CategoryId } from "@/types/skill";
 import { SkillCard } from "@/components/skills/skill-card";
 import { DemoDataBanner } from "@/components/layout/data-banner";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 
 type Props = { params: Promise<{ category: string }> };
 
@@ -63,11 +62,9 @@ export default async function CategoryPage({ params }: Props) {
           title="NO CATEGORIES FROM THIS SOURCE."
           body={`${provider.label} does not publish a category taxonomy, so we will not invent one. Search instead — it works.`}
           action={
-            <Link href="/explore">
-              <Button pixel className="text-[10px]">
+            <ButtonLink href="/explore" pixel className="text-[10px]">
                 GO TO SEARCH
-              </Button>
-            </Link>
+              </ButtonLink>
           }
         />
       ) : (
