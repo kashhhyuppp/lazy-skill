@@ -10,8 +10,11 @@ import {
   type InstallProgress,
 } from "../adapters/index.js";
 import { THEMES, rgb, style, type Theme } from "../ui/theme.js";
-import { blank, fail, hint, line, muted, ok, status, welcome } from "../ui/layout.js";
+import { blank, fail, hint, line, muted, ok, status } from "../ui/layout.js";
+import { compactBanner } from "../ui/banner.js";
 import { messages } from "../ui/messages.js";
+
+const VERSION = "0.8.0";
 
 const STAGE_LABEL: Record<string, string> = {
   starting: "Preparing",
@@ -106,7 +109,7 @@ export async function installCommand(
 
   // Show exactly what will run, before it runs.
   blank();
-  welcome(theme, "Lazy Skill");
+  for (const row of compactBanner(theme, VERSION)) console.log(row);
   blank();
   line(`${style.bold(ref)}`);
   muted(`for ${targets.map((t) => t.label).join(", ")} · ${options.project ? "this project" : "global"}`);

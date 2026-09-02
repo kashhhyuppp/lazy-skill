@@ -1,6 +1,6 @@
 {
   "name": "lazy-skill",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Found an AI skill while scrolling? Install it to your computer from your phone.",
   "type": "module",
   "bin": {

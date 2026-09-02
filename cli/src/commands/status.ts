@@ -2,12 +2,15 @@ import { api, ApiError } from "../lib/api.js";
 import { readConfig } from "../lib/config.js";
 import { detectAgents } from "../adapters/index.js";
 import { THEMES, style } from "../ui/theme.js";
-import { blank, line, muted, status, welcome } from "../ui/layout.js";
+import { blank, line, muted, status } from "../ui/layout.js";
+import { compactBanner } from "../ui/banner.js";
 
 interface StatusResponse {
   ok: boolean;
   device: { id: string; name: string; platform: string; theme: string; detectedAgents: string[] };
 }
+
+const VERSION = "0.8.0";
 
 export async function statusCommand(): Promise<number> {
   const config = readConfig();
@@ -15,7 +18,7 @@ export async function statusCommand(): Promise<number> {
   const agents = await detectAgents();
 
   blank();
-  welcome(theme, "Lazy Skill");
+  for (const row of compactBanner(theme, VERSION)) console.log(row);
   blank();
 
   if (!config.deviceToken) {

@@ -11,7 +11,7 @@ import { themeCommand } from "./commands/theme.js";
 import { listenCommand } from "./commands/listen.js";
 import { warnIfOutdated } from "./lib/version-check.js";
 
-const VERSION = "0.7.0";
+const VERSION = "0.8.0";
 
 function help(): void {
   const theme = THEMES[readConfig().theme];
