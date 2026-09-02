@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { readConfig } from "./lib/config.js";
+import { isFirstRun, readConfig, updateConfig } from "./lib/config.js";
+import { chooseTheme } from "./ui/onboarding.js";
 import { THEMES, rgb, style } from "./ui/theme.js";
 import { connectCommand } from "./commands/connect.js";
 import { disconnectCommand } from "./commands/disconnect.js";
@@ -10,7 +11,7 @@ import { themeCommand } from "./commands/theme.js";
 import { listenCommand } from "./commands/listen.js";
 import { warnIfOutdated } from "./lib/version-check.js";
 
-const VERSION = "0.3.0";
+const VERSION = "0.4.0";
 
 function help(): void {
   const theme = THEMES[readConfig().theme];
@@ -67,6 +68,15 @@ async function main(): Promise<number> {
   // Only for the long-running commands: a stale copy matters most when the
   // user is about to sit and wait for something that will never work.
   const longRunning = !command || command === "connect" || command === "listen";
+
+  // Ask for a colour before anything is drawn, so the first thing the user
+  // sees is already in their theme — and so the phone has something to adopt
+  // when it pairs a moment later. Only on a genuinely first run, and never
+  // for `theme`, which asks on its own.
+  if (isFirstRun() && command !== "theme") {
+    updateConfig({ theme: await chooseTheme() });
+  }
+
   if (longRunning) await warnIfOutdated(VERSION, THEMES[readConfig().theme]);
 
   if (!command) {

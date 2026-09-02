@@ -4,7 +4,7 @@ import { homePath } from "../adapters/detect.js";
 import { detectAgents } from "../adapters/index.js";
 import { readConfig } from "../lib/config.js";
 import { THEMES, style } from "../ui/theme.js";
-import { blank, brand, line, muted, status } from "../ui/layout.js";
+import { blank, line, muted, status, welcome } from "../ui/layout.js";
 
 /**
  * Where each agent keeps installed skills. Read-only lookups — the CLI lists
@@ -40,7 +40,7 @@ export async function skillsCommand(): Promise<number> {
   const agents = await detectAgents();
 
   blank();
-  brand(theme);
+  welcome(theme, "Lazy Skill");
   blank();
 
   let total = 0;

@@ -29,6 +29,11 @@ export function configPath(): string {
   return FILE;
 }
 
+/** True before the user has ever been asked anything. */
+export function isFirstRun(): boolean {
+  return !existsSync(FILE);
+}
+
 export function readConfig(): CliConfig {
   try {
     if (!existsSync(FILE)) return { ...DEFAULTS };

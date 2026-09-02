@@ -10,7 +10,7 @@ import {
   type InstallProgress,
 } from "../adapters/index.js";
 import { THEMES, rgb, style, type Theme } from "../ui/theme.js";
-import { blank, brand, fail, line, muted, ok, status } from "../ui/layout.js";
+import { blank, fail, hint, line, muted, ok, status, welcome } from "../ui/layout.js";
 import { messages } from "../ui/messages.js";
 
 const STAGE_LABEL: Record<string, string> = {
@@ -106,7 +106,7 @@ export async function installCommand(
 
   // Show exactly what will run, before it runs.
   blank();
-  brand(theme);
+  welcome(theme, "Lazy Skill");
   blank();
   line(`${style.bold(ref)}`);
   muted(`for ${targets.map((t) => t.label).join(", ")} · ${options.project ? "this project" : "global"}`);

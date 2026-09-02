@@ -2,7 +2,7 @@ import { api, ApiError } from "../lib/api.js";
 import { readConfig } from "../lib/config.js";
 import { detectAgents } from "../adapters/index.js";
 import { THEMES, style } from "../ui/theme.js";
-import { blank, brand, line, muted, status } from "../ui/layout.js";
+import { blank, line, muted, status, welcome } from "../ui/layout.js";
 
 interface StatusResponse {
   ok: boolean;
@@ -15,7 +15,7 @@ export async function statusCommand(): Promise<number> {
   const agents = await detectAgents();
 
   blank();
-  brand(theme);
+  welcome(theme, "Lazy Skill");
   blank();
 
   if (!config.deviceToken) {

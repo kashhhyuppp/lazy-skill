@@ -3,8 +3,9 @@ import { api, ApiError } from "../lib/api.js";
 import { readConfig, updateConfig } from "../lib/config.js";
 import { detectAgents, type AgentStatus } from "../adapters/index.js";
 import { THEMES, style, type Theme } from "../ui/theme.js";
-import { renderFramedQr } from "../ui/qr.js";
-import { blank, brand, fail, heading, line, muted, ok, status } from "../ui/layout.js";
+import { boxWidth, visibleWidth } from "../ui/layout.js";
+import { renderQr } from "../ui/qr.js";
+import { blank, box, centre, fail, hint, line, muted, ok, status, welcome } from "../ui/layout.js";
 import { messages } from "../ui/messages.js";
 import { Spinner } from "../ui/spinner.js";
 
@@ -44,8 +45,9 @@ export async function connectCommand(options: {
   const theme: Theme = THEMES[config.theme];
 
   blank();
-  brand(theme);
-  muted("See it. Search it. Install it.");
+  welcome(theme, "Welcome to Lazy Skill!");
+  blank();
+  hint("See it. Search it. Install it.");
   blank();
 
   // Detection runs before anything is drawn: a spinner writes to the current
@@ -84,11 +86,14 @@ export async function connectCommand(options: {
     return 1;
   }
 
-  heading(theme, "Scan to connect");
-  muted("Open Lazy Skill on your phone and point the camera here.");
+  hint("Open Lazy Skill on your phone and scan this.");
   blank();
 
-  for (const row of await renderFramedQr(session.pairUrl)) console.log(row);
+  // The QR is the one thing to act on, so it gets the box. Its own quiet zone
+  // sits inside the border, untouched.
+  const plate = await renderQr(session.pairUrl);
+  const width = plate.length ? visibleWidth(plate[0]) + 4 : boxWidth();
+  box(theme, plate.map((row) => centre(row, width)), width);
 
   blank();
   muted(session.pairUrl);
