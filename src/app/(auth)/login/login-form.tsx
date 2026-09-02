@@ -4,6 +4,7 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail } from "lucide-react";
 import { GithubMark } from "@/components/brand/github-mark";
+import { GoogleMark } from "@/components/brand/google-mark";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
@@ -15,12 +16,26 @@ const ERRORS: Record<string, string> = {
   unconfigured: "Accounts are not set up on this deployment yet.",
 };
 
+/**
+ * Sign-in providers, in the order they are offered.
+ *
+ * A provider only works once it has been switched on in the Supabase
+ * dashboard; adding one here does not enable it. Supabase answers an
+ * un-enabled provider with "Unsupported provider", which is accurate and
+ * useless to a person, so it is rewritten below.
+ */
+const PROVIDERS = [
+  { id: "github" as const, label: "GitHub", Mark: GithubMark },
+  { id: "google" as const, label: "Google", Mark: GoogleMark },
+];
+
 export function LoginForm({ configured }: { configured: boolean }) {
   const params = useSearchParams();
   const next = params.get("next") ?? "/home";
 
   const [email, setEmail] = React.useState("");
   const [status, setStatus] = React.useState<"idle" | "working" | "sent">("idle");
+  const [pending, setPending] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(ERRORS[params.get("error") ?? ""] ?? null);
 
   const redirectTo = () =>
@@ -43,16 +58,24 @@ export function LoginForm({ configured }: { configured: boolean }) {
     }
   }
 
-  async function signInWithGithub() {
+  async function signInWith(provider: (typeof PROVIDERS)[number]) {
     setError(null);
+    setPending(provider.id);
     try {
       const { error } = await createClient().auth.signInWithOAuth({
-        provider: "github",
+        provider: provider.id,
         options: { redirectTo: redirectTo() },
       });
       if (error) throw error;
+      // On success the browser leaves for the provider, so nothing below runs.
     } catch (err) {
-      setError((err as Error).message);
+      const message = (err as Error).message;
+      setError(
+        /unsupported provider|not enabled/i.test(message)
+          ? `${provider.label} sign-in is not switched on for this site yet. Use another option for now.`
+          : message
+      );
+      setPending(null);
     }
   }
 
@@ -97,10 +120,21 @@ export function LoginForm({ configured }: { configured: boolean }) {
         </p>
       </div>
 
-      <Button variant="secondary" size="lg" className="mt-7 w-full" onClick={signInWithGithub}>
-        <GithubMark size={16} />
-        Continue with GitHub
-      </Button>
+      <div className="mt-7 space-y-2.5">
+        {PROVIDERS.map((provider) => (
+          <Button
+            key={provider.id}
+            variant="secondary"
+            size="lg"
+            className="w-full"
+            disabled={pending !== null}
+            onClick={() => signInWith(provider)}
+          >
+            <provider.Mark size={16} />
+            {pending === provider.id ? "Redirecting..." : `Continue with ${provider.label}`}
+          </Button>
+        ))}
+      </div>
 
       <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-line" />
