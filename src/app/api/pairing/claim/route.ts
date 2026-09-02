@@ -118,11 +118,24 @@ export async function POST(request: Request) {
     );
   }
 
-  // Park the token for the CLI's next poll. It is erased the moment it is read.
-  await supabase
+  // Park the token for the CLI's next poll. It is erased the moment it is
+  // read. Written together with device_id, so a poll never sees one without
+  // the other — that pairing is what lets the poll tell "still finishing"
+  // apart from "already collected".
+  const { error: parkError } = await supabase
     .from("pairing_tokens")
     .update({ pending_token: deviceToken, device_id: device.id })
     .eq("id", pairing.id);
+
+  if (parkError) {
+    // The device exists but the CLI can never collect its token, so the pair
+    // would hang forever. Roll it back and let the user try again.
+    await supabase.from("devices").delete().eq("id", device.id);
+    return NextResponse.json(
+      { error: "server_error", message: "Could not finish pairing. Try again." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ ok: true, device });
 }

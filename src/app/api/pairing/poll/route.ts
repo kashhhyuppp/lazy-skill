@@ -59,7 +59,19 @@ export async function POST(request: Request) {
   }
 
   if (!row.pending_token) {
-    // Already collected. The CLI that paired has its token; nobody else gets one.
+    // Claiming is not a single write: the phone marks the code claimed, then
+    // the device row is created, then the token is parked here. A poll landing
+    // inside that window sees a claimed code with no token yet — which is not
+    // the same as the token having been collected, and reporting "consumed"
+    // there made the CLI give up on a pairing that was seconds from working.
+    //
+    // device_id is what separates the two: it is written together with the
+    // token, so its absence means the claim is still in flight.
+    if (!row.device_id) {
+      return NextResponse.json({ status: "waiting" });
+    }
+    // Genuinely collected. The CLI that paired has its token; nobody else
+    // gets one.
     return NextResponse.json({ status: "consumed" });
   }
 
