@@ -24,9 +24,11 @@ export function DeviceList({ devices }: { devices: DeviceRow[] }) {
   const router = useRouter();
 
   /**
-   * Live updates. The CLI heartbeats into `devices`, so subscribing to that
-   * table is enough to reflect a machine coming online or an agent being
-   * installed, without polling.
+   * Live updates from the CLI's heartbeat.
+   *
+   * Realtime is the fast path, not the only path: a channel can connect and
+   * then deliver nothing, which would leave a device showing "offline"
+   * indefinitely after it came back. A slow refresh runs alongside it.
    */
   React.useEffect(() => {
     if (!supabaseConfig().isConfigured) return;
@@ -41,7 +43,12 @@ export function DeviceList({ devices }: { devices: DeviceRow[] }) {
       )
       .subscribe();
 
+    // Online state is derived from a timestamp, so it goes stale on its own
+    // even when nothing changes server-side.
+    const timer = setInterval(() => router.refresh(), 20_000);
+
     return () => {
+      clearInterval(timer);
       void supabase.removeChannel(channel);
     };
   }, [router]);

@@ -68,21 +68,34 @@ export function InstallDialog({
   const [rows, setRows] = React.useState<InstallRow[]>([]);
   const [error, setError] = React.useState<string | null>(null);
   const [jobId, setJobId] = React.useState<string | null>(null);
+  const [stalled, setStalled] = React.useState(false);
   const router = useRouter();
 
-  // Watch the history rows the CLI writes into. Realtime rather than polling,
-  // because the device drives the pace and we do not know how long it takes.
+  /**
+   * Watch the history rows the CLI writes into.
+   *
+   * Realtime gives an instant update, but it is not trusted as the only
+   * source: a channel that connects and then silently delivers nothing leaves
+   * this screen stuck on "waiting" while the install has already finished.
+   * A poll runs alongside it and stops once every row is settled, so the UI
+   * always converges even if realtime never fires.
+   */
   React.useEffect(() => {
     if (!jobId || !supabaseConfig().isConfigured) return;
 
     const supabase = createClient();
+    let done = false;
 
     const load = async () => {
       const { data } = await supabase
         .from("installations")
         .select("agent_id, status, stage, error")
         .eq("job_id", jobId);
-      if (data) setRows(data as InstallRow[]);
+      if (!data) return;
+      setRows(data as InstallRow[]);
+      if (data.length > 0 && data.every((r) => r.status === "success" || r.status === "failed")) {
+        done = true;
+      }
     };
 
     void load();
@@ -96,7 +109,24 @@ export function InstallDialog({
       )
       .subscribe();
 
+    // Backstop. Cheap, and it is the difference between a screen that
+    // resolves and one that lies.
+    const timer = setInterval(() => {
+      if (done) {
+        clearInterval(timer);
+        return;
+      }
+      void load();
+    }, 2000);
+
+    // An install that never reports is a failure, not an eternal wait.
+    const giveUp = setTimeout(() => {
+      if (!done) setStalled(true);
+    }, 120_000);
+
     return () => {
+      clearInterval(timer);
+      clearTimeout(giveUp);
       void supabase.removeChannel(channel);
     };
   }, [jobId]);
@@ -137,6 +167,7 @@ export function InstallDialog({
         return;
       }
       setJobId(body.jobId ?? null);
+      setStalled(false);
       router.refresh();
     } catch {
       setError("Could not reach the server.");
@@ -298,8 +329,10 @@ export function InstallDialog({
                 <p className="font-pixel text-[11px] text-ink">
                   {derived === "queued" ? "SENDING TO YOUR COMPUTER..." : "INSTALLING..."}
                 </p>
-                <p className="mt-2 text-[12px] text-dim">
-                  You can close this. It&apos;ll keep going.
+                <p className="mt-2 text-[12px] leading-relaxed text-dim">
+                  {stalled
+                    ? "Still nothing back. Check that lazy-skill is running on your computer."
+                    : "You can close this. It'll keep going."}
                 </p>
               </div>
             </div>
