@@ -10,7 +10,7 @@ import {
   type InstallProgress,
 } from "../adapters/index.js";
 import { THEMES, rgb, style, type Theme } from "../ui/theme.js";
-import { bottom, centered, mascot, row, top } from "../ui/box.js";
+import { blank, brand, fail, line, muted, ok, status } from "../ui/layout.js";
 import { messages } from "../ui/messages.js";
 
 const STAGE_LABEL: Record<string, string> = {
@@ -105,18 +105,15 @@ export async function installCommand(
   }
 
   // Show exactly what will run, before it runs.
-  console.log();
-  console.log(top(theme));
-  console.log(row(theme));
-  console.log(row(theme, style.bold(`Install ${ref}`)));
-  console.log(row(theme, `for ${targets.map((t) => t.label).join(", ")}`));
-  console.log(row(theme, style.gray(options.project ? "scope: this project" : "scope: global")));
-  console.log(row(theme));
-  console.log(row(theme, style.gray("This will run:")));
-  console.log(row(theme, rgb(theme.accent, describePlan(plan).slice(0, 48))));
-  console.log(row(theme));
-  console.log(bottom(theme));
-  console.log();
+  blank();
+  brand(theme);
+  blank();
+  line(`${style.bold(ref)}`);
+  muted(`for ${targets.map((t) => t.label).join(", ")} · ${options.project ? "this project" : "global"}`);
+  blank();
+  muted("This will run:");
+  line(rgb(theme.accent, describePlan(plan)));
+  blank();
 
   if (!options.yes && !(await confirm("Continue?"))) {
     console.log(`  ${style.gray("Cancelled. Nothing was installed.")}\n`);
@@ -130,7 +127,7 @@ export async function installCommand(
     lastStage = progress.stage;
     if (progress.stage === "done" || progress.stage === "failed") return;
     const label = STAGE_LABEL[progress.stage] ?? progress.stage;
-    console.log(`  ${label.padEnd(12)} ${progressBar(theme, progress.stage)}`);
+    line(`${style.gray(label.padEnd(12))} ${progressBar(theme, progress.stage)}`);
   };
 
   // One adapter at a time, so a failure names the agent it belongs to.
@@ -146,27 +143,19 @@ export async function installCommand(
   console.log();
 
   if (failures.length > 0) {
-    console.log(`  ${style.red("✗")} ${messages.failed()}`);
-    for (const failure of failures) console.log(`  ${style.gray(failure)}`);
-    console.log(`  ${style.gray("We haven't blamed you yet.")}\n`);
+    fail(messages.failed());
+    for (const failure of failures) muted(failure);
+    blank();
     return 1;
   }
 
-  console.log(top(theme));
-  console.log(row(theme));
-  for (const line of mascot(theme, true)) console.log(centered(theme, line));
-  console.log(row(theme));
-  console.log(centered(theme, rgb(theme.accent, style.bold("INSTALLED!"))));
-  console.log(row(theme));
-  console.log(row(theme, `${ref}`));
-  for (const target of targets) {
-    console.log(row(theme, `${target.label.padEnd(12)} ${style.green("✓")}`));
-  }
-  console.log(row(theme));
-  console.log(row(theme, `${style.gray("You contributed")}   ${style.bold("0% effort")}`));
-  console.log(row(theme, `${style.gray("Lazy Skill")}        ${rgb(theme.accent, "100% effort")}`));
-  console.log(row(theme));
-  console.log(bottom(theme));
-  console.log();
+  blank();
+  ok(style.bold("Installed"));
+  line(style.gray(ref));
+  blank();
+  for (const target of targets) status(target.label, "ok", "installed");
+  blank();
+  muted("You contributed 0% effort. Lazy Skill did the rest.");
+  blank();
   return 0;
 }

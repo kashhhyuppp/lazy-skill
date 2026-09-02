@@ -4,6 +4,22 @@ import QRCode from "qrcode";
 const QR_OPEN = "\x1b[47m\x1b[30m";
 const QR_CLOSE = "\x1b[0m";
 
+// eslint-disable-next-line no-control-regex
+const ANSI = /\x1b\[[0-9;]*m/g;
+
+function stripAnsi(text: string): string {
+  return text.replace(ANSI, "");
+}
+
+/** Visible cell count, ignoring escape sequences. */
+export function visibleLength(text: string): number {
+  return stripAnsi(text).length;
+}
+
+function escapeRe(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * Renders the pairing QR.
  *
@@ -12,12 +28,12 @@ const QR_CLOSE = "\x1b[0m";
  * reliability is not negotiable for decoration (§10).
  *
  * The quiet zone is added here rather than passed as an option: node-qrcode's
- * terminal renderer ignores `margin` when `small` is set, and ships only a
- * single module of padding. The standard wants four, and without it the finder
- * patterns sit flush against surrounding terminal text, which measurably hurts
- * scanning. Each rendered row is two modules tall (half-blocks), so two blank
- * rows above and below give the four modules vertically, and three extra
- * columns each side top up the one already present.
+ * terminal renderer ignores `margin` when `small` is set and ships only a
+ * single module of padding, where the standard wants four. Without it the
+ * finder patterns sit flush against surrounding text, which measurably hurts
+ * scanning. Each rendered row is two modules tall, so two blank rows above and
+ * below give four modules vertically, and three extra columns per side top up
+ * the one already present.
  */
 export async function renderQr(url: string): Promise<string[]> {
   const art = await QRCode.toString(url, {
@@ -28,11 +44,13 @@ export async function renderQr(url: string): Promise<string[]> {
 
   const rows = art
     .split("\n")
-    .filter((line) => stripAnsi(line).length > 0)
+    .filter((row) => stripAnsi(row).length > 0)
     // Drop only the wrapper this renderer adds. Interior codes are left alone:
     // the final half-row recolours per cell, and rewriting that would corrupt
     // the modules themselves.
-    .map((line) => line.replace(new RegExp(`^${escapeRe(QR_OPEN)}`), "").replace(/\x1b\[0m$/, ""));
+    .map((row) =>
+      row.replace(new RegExp(`^${escapeRe(QR_OPEN)}`), "").replace(/\x1b\[0m$/, "")
+    );
 
   if (rows.length === 0) return [];
 
@@ -52,18 +70,15 @@ export async function renderQr(url: string): Promise<string[]> {
   return [blank, blank, ...padded, blank, blank];
 }
 
-// eslint-disable-next-line no-control-regex
-const ANSI = /\x1b\[[0-9;]*m/g;
-
-function stripAnsi(text: string): string {
-  return text.replace(ANSI, "");
-}
-
-/** Visible cell count, ignoring escape sequences. */
-export function visibleLength(text: string): number {
-  return stripAnsi(text).length;
-}
-
-function escapeRe(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/**
+ * The QR, indented to sit with the rest of the output.
+ *
+ * No frame. The white plate is already a clean, high-contrast rectangle with
+ * its own quiet zone — drawing rails around it added a border glyph to every
+ * single row and made the densest thing on screen denser still. Indentation
+ * places it; nothing else is needed.
+ */
+export async function renderFramedQr(url: string): Promise<string[]> {
+  const plate = await renderQr(url);
+  return plate.map((row) => `  ${row}`);
 }

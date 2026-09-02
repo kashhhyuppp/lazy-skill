@@ -4,11 +4,11 @@ import { homePath } from "../adapters/detect.js";
 import { detectAgents } from "../adapters/index.js";
 import { readConfig } from "../lib/config.js";
 import { THEMES, style } from "../ui/theme.js";
-import { bottom, centered, row, top, wordmark } from "../ui/box.js";
+import { blank, brand, line, muted, status } from "../ui/layout.js";
 
 /**
- * Where each agent keeps installed skills. These are read-only lookups — the
- * CLI lists what is on disk and never infers a skill that is not there.
+ * Where each agent keeps installed skills. Read-only lookups — the CLI lists
+ * what is on disk and never infers a skill that is not there.
  */
 const SKILL_DIRS: Record<string, string[]> = {
   claude: [homePath(".claude", "skills")],
@@ -39,47 +39,33 @@ export async function skillsCommand(): Promise<number> {
   const theme = THEMES[readConfig().theme];
   const agents = await detectAgents();
 
-  console.log();
-  console.log(top(theme));
-  console.log(row(theme));
-  for (const line of wordmark(theme)) console.log(centered(theme, line));
-  console.log(row(theme));
-  console.log(row(theme, style.bold("Installed skills on this computer")));
-  console.log(row(theme));
+  blank();
+  brand(theme);
+  blank();
 
   let total = 0;
 
   for (const agent of agents) {
     if (!agent.detected) {
-      console.log(row(theme, `${agent.label.padEnd(10)} ${style.gray("not detected")}`));
+      status(agent.label, "off");
       continue;
     }
 
     const skills = listSkillDirs(SKILL_DIRS[agent.id] ?? []);
     total += skills.length;
 
-    console.log(
-      row(
-        theme,
-        `${style.bold(agent.label.padEnd(10))} ${
-          skills.length ? style.green(`${skills.length}`) : style.gray("none found")
-        }`
-      )
-    );
-    for (const skill of skills.slice(0, 20)) {
-      console.log(row(theme, style.gray(`  · ${skill}`)));
+    status(agent.label, "ok", skills.length ? `${skills.length} installed` : "none installed");
+    for (const skill of skills.slice(0, 12)) {
+      line(style.gray(`     ${skill}`));
     }
-    if (skills.length > 20) {
-      console.log(row(theme, style.gray(`  … and ${skills.length - 20} more`)));
+    if (skills.length > 12) {
+      line(style.gray(`     and ${skills.length - 12} more`));
     }
   }
 
-  console.log(row(theme));
-  if (total === 0) {
-    console.log(row(theme, style.gray("Nothing installed yet. You haven't been lazy enough.")));
-    console.log(row(theme));
-  }
-  console.log(bottom(theme));
-  console.log();
+  blank();
+  if (total === 0) muted("Nothing installed yet. You haven't been lazy enough.");
+  else muted(`${total} skill${total === 1 ? "" : "s"} across your tools.`);
+  blank();
   return 0;
 }

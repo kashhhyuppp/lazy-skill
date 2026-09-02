@@ -2,9 +2,9 @@ import { hostname, platform, release } from "node:os";
 import { api, ApiError } from "../lib/api.js";
 import { readConfig, updateConfig } from "../lib/config.js";
 import { detectAgents, type AgentStatus } from "../adapters/index.js";
-import { THEMES, rgb, style, type Theme } from "../ui/theme.js";
-import { bottom, centered, mascot, row, statusLine, top, wordmark } from "../ui/box.js";
-import { renderQr } from "../ui/qr.js";
+import { THEMES, style, type Theme } from "../ui/theme.js";
+import { renderFramedQr } from "../ui/qr.js";
+import { blank, brand, fail, heading, line, muted, ok, status } from "../ui/layout.js";
 import { messages } from "../ui/messages.js";
 import { Spinner } from "../ui/spinner.js";
 
@@ -30,20 +30,9 @@ function deviceName(): string {
   return hostname().replace(/\.local$/, "").slice(0, 80) || "This computer";
 }
 
-function printHeader(theme: Theme): void {
-  console.log();
-  console.log(top(theme));
-  console.log(row(theme));
-  for (const line of wordmark(theme)) console.log(centered(theme, line));
-  console.log(centered(theme, style.dim("Too lazy to install manually? Same.")));
-  console.log(row(theme));
-}
-
-function printAgents(theme: Theme, agents: AgentStatus[]): void {
-  console.log(row(theme, style.bold("Detected AI tools")));
-  console.log(row(theme));
+function printAgents(agents: AgentStatus[]): void {
   for (const agent of agents) {
-    console.log(row(theme, statusLine(agent.label, agent.detected ? true : null)));
+    status(agent.label, agent.detected ? "ok" : "off");
   }
 }
 
@@ -52,28 +41,31 @@ export async function connectCommand(options: {
   listen?: boolean;
 }): Promise<number> {
   const config = readConfig();
-  const theme = THEMES[config.theme];
+  const theme: Theme = THEMES[config.theme];
 
-  // Detection runs before the card is drawn. A spinner writes to the current
-  // line, so anything transient printed between two card rows tears the frame.
-  const detectSpinner = new Spinner(theme, messages.booting()[0]).start();
+  blank();
+  brand(theme);
+  muted("See it. Search it. Install it.");
+  blank();
+
+  // Detection runs before anything is drawn: a spinner writes to the current
+  // line, and anything transient printed mid-layout tears it.
+  const spinner = new Spinner(theme, "looking for your AI tools").start();
   const agents = await detectAgents();
   const detectedIds = agents.filter((a) => a.detected).map((a) => a.id);
-  detectSpinner.stop();
+  spinner.stop();
 
-  printHeader(theme);
-  console.log(row(theme, `${style.gray(">")} ${messages.humanFound()} ${style.green("✓")}`));
-  console.log(row(theme, `${style.gray(">")} ${messages.generating()}`));
-  console.log(row(theme));
+  printAgents(agents);
 
   if (options.verbose) {
+    blank();
     for (const agent of agents) {
-      if (agent.evidence) console.log(row(theme, style.gray(`  ${agent.label}: ${agent.evidence}`)));
+      if (agent.evidence) muted(`  ${agent.label}: ${agent.evidence}`);
     }
-    console.log(row(theme));
   }
 
-  // --- open a pairing session -----------------------------------------
+  blank();
+
   let session: StartResponse;
   try {
     session = await api<StartResponse>("/api/pairing/start", {
@@ -86,30 +78,26 @@ export async function connectCommand(options: {
       },
     });
   } catch (err) {
-    console.log(bottom(theme));
-    console.log();
-    const message = err instanceof ApiError ? err.message : messages.failed();
-    console.error(`  ${style.red("✗")} ${message}`);
-    console.error(`  ${style.gray("Set LAZY_SKILL_API_URL if you are pointing at a local server.")}`);
-    console.log();
+    fail(err instanceof ApiError ? err.message : messages.failed());
+    muted("Set LAZY_SKILL_API_URL to point at a different server.");
+    blank();
     return 1;
   }
 
-  console.log(bottom(theme));
-  console.log();
+  heading(theme, "Scan to connect");
+  muted("Open Lazy Skill on your phone and point the camera here.");
+  blank();
 
-  const qrLines = await renderQr(session.pairUrl);
-  for (const line of qrLines) console.log(line);
+  for (const row of await renderFramedQr(session.pairUrl)) console.log(row);
 
-  console.log(`  ${style.bold("Scan with the Lazy Skill app")}`);
-  console.log(`  ${style.gray(session.pairUrl)}`);
-  console.log();
+  blank();
+  muted(session.pairUrl);
+  blank();
 
-  // --- wait for the phone ---------------------------------------------
   const deadline = Date.now() + session.expiresInMs;
-  const waitSpinner = new Spinner(theme, messages.waiting()).start();
+  const waiting = new Spinner(theme, "waiting for scan").start();
 
-  let lastNudge = Date.now();
+  let nudgedAt = Date.now();
   let result: PollResponse = { status: "waiting" };
 
   while (Date.now() < deadline) {
@@ -125,14 +113,13 @@ export async function connectCommand(options: {
 
     if (result.status !== "waiting") break;
 
-    // Rotate the waiting line occasionally so a long wait stays alive.
-    if (Date.now() - lastNudge > 12_000) {
-      waitSpinner.update(messages.waiting());
-      lastNudge = Date.now();
+    if (Date.now() - nudgedAt > 15_000) {
+      waiting.update(messages.waiting());
+      nudgedAt = Date.now();
     }
   }
 
-  waitSpinner.stop();
+  waiting.stop();
 
   if (result.status === "paired" && result.deviceToken) {
     updateConfig({
@@ -142,48 +129,27 @@ export async function connectCommand(options: {
       connectedAt: new Date().toISOString(),
     });
 
-    console.log(`  ${style.gray(">")} ${messages.scanned()} ${rgb(theme.support, "📱")}`);
-    console.log(`  ${style.gray(">")} ${messages.authenticating()} ${style.green("✓")}`);
-    console.log();
+    ok(style.bold("Connected"));
+    line(style.gray(result.device?.name ?? deviceName()));
+    blank();
 
-    console.log(top(theme));
-    console.log(row(theme));
-    for (const line of mascot(theme, true)) console.log(centered(theme, line));
-    console.log(row(theme));
-    console.log(centered(theme, rgb(theme.accent, style.bold(messages.connected()))));
-    console.log(row(theme));
-    printAgents(theme, agents);
-    console.log(row(theme));
-    console.log(centered(theme, style.dim(messages.signOff())));
-    console.log(row(theme));
-    console.log(bottom(theme));
-    console.log();
-    console.log(`  ${style.gray("Credential stored in ~/.lazyskill/config.json (0600).")}`);
-
-    // Keep listening by default. Someone who has just paired a computer and
-    // reached for their phone wants an install to land, not a second command
-    // to remember — a queued job with nothing polling for it just looks broken.
     if (options.listen === false) {
-      console.log(
-        `  ${style.gray("Run")} ${rgb(theme.accent, "lazy-skill listen")} ${style.gray("when you want to install from your phone.")}`
-      );
-      console.log();
+      muted("Run lazy-skill when you want to install from your phone.");
+      blank();
       return 0;
     }
 
-    console.log();
     const { listenCommand } = await import("./listen.js");
     return listenCommand();
   }
 
-  const reason =
-    result.status === "consumed"
-      ? "That code was already used."
-      : messages.expired();
-
-  console.log(`  ${style.yellow("!")} ${reason}`);
-  console.log(`  ${style.gray("Run")} ${rgb(theme.accent, "npx lazy-skill connect")} ${style.gray("for a fresh one.")}`);
-  console.log();
+  if (result.status === "consumed") {
+    fail("That code was already used.");
+  } else {
+    fail(messages.expired());
+  }
+  muted("Run lazy-skill for a fresh one.");
+  blank();
   return 1;
 }
 
