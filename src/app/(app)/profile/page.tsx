@@ -11,6 +11,7 @@ import { Mascot } from "@/components/brand/mascot";
 import { Badge } from "@/components/ui/badge";
 import { getPlayerState } from "@/lib/db/gamification";
 import { AchievementGrid } from "@/components/gamification/achievement-grid";
+import { ThemeGrid } from "@/components/theme/theme-grid";
 import { StreakCalendar } from "@/components/gamification/streak-calendar";
 
 export const metadata: Metadata = { title: "Profile" };
@@ -103,6 +104,15 @@ export default async function ProfilePage() {
           </p>
         </Panel>
       )}
+
+      <Panel className="p-6">
+        <PanelLabel className="mb-2">Theme</PanelLabel>
+        <p className="mb-4 text-[12px] leading-relaxed text-dim">
+          Applies here and in the CLI. Whichever theme your terminal is set to
+          comes across when you pair a computer.
+        </p>
+        <ThemeGrid />
+      </Panel>
 
       <div className="space-y-3">
         <PanelLabel>Achievements</PanelLabel>

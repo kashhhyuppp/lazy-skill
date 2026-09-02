@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import { Check, Keyboard, QrCode } from "lucide-react";
 import { ScannerView } from "@/components/pairing/scanner-view";
 import { Mascot } from "@/components/brand/mascot";
+import { CommandStep } from "@/components/pairing/command-step";
 import { Panel } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme/theme-provider";
 import { isThemeId } from "@/lib/themes";
 import { extractCode } from "@/lib/pairing/code";
-import { cn } from "@/lib/utils";
 
 type Phase = "choose" | "scanning" | "manual" | "claiming" | "paired" | "failed";
 
@@ -57,6 +57,34 @@ function clearPending(): void {
   } catch {
     // Nothing to clear.
   }
+}
+
+/** One numbered step. Kept plain: the content is the instruction. */
+function Step({
+  n,
+  title,
+  body,
+  children,
+}: {
+  n: number;
+  title: string;
+  body: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Panel className="p-5">
+      <div className="flex gap-3.5">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 font-pixel text-[10px] text-accent">
+          {n}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-semibold leading-tight text-ink">{title}</p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-dim">{body}</p>
+          {children}
+        </div>
+      </div>
+    </Panel>
+  );
 }
 
 export function PairClient({ signedIn }: { signedIn: boolean }) {
@@ -270,38 +298,34 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
           </form>
         </Panel>
       ) : (
-        <Panel className="p-6">
-          <div className="flex items-start gap-4">
-            <Mascot expression="curious" size={56} className="shrink-0" />
-            <div>
-              <p className="text-[15px] font-semibold text-ink">Connect your computer</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-dim">
-                Run{" "}
-                <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-accent">
-                  npx lazy-skill connect
-                </code>{" "}
-                on your computer, then scan the QR it prints.
-              </p>
-            </div>
-          </div>
+        <div className="space-y-3">
+          <Step
+            n={1}
+            title="Run this on your computer"
+            body="Any terminal. It prints a QR code."
+          >
+            <CommandStep command="npx lazy-skill" className="mt-3" />
+          </Step>
 
-          <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
-            <Button size="lg" onClick={() => setPhase("scanning")}>
-              <QrCode size={16} />
-              Scan QR
-            </Button>
-            <Button size="lg" variant="secondary" onClick={() => setPhase("manual")}>
-              <Keyboard size={16} />
-              Enter code
-            </Button>
-          </div>
+          <Step n={2} title="Scan it with this phone" body="Point the camera at your screen.">
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+              <Button size="lg" onClick={() => setPhase("scanning")}>
+                <QrCode size={16} />
+                Scan QR
+              </Button>
+              <Button size="lg" variant="secondary" onClick={() => setPhase("manual")}>
+                <Keyboard size={16} />
+                Enter code
+              </Button>
+            </div>
+          </Step>
 
           {!signedIn && (
-            <p className={cn("mt-5 text-center text-[12px] text-faint")}>
+            <p className="pt-1 text-center text-[12px] text-faint">
               You&apos;ll be asked to sign in before the computer is linked.
             </p>
           )}
-        </Panel>
+        </div>
       )}
     </div>
   );
