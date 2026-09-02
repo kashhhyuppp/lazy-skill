@@ -42,6 +42,22 @@ const ROUTES = [
  *    that route belonged to a different page.
  *  - A URL comparison calls anything that does not navigate "dead", which
  *    wrongly condemns toggles, tabs already selected, and load-more.
+ *
+ * And from the second and third runs:
+ *
+ *  - Controls were tagged by array index, then the page was reloaded between
+ *    clicks. The DOM differs after a reload, so index N pointed at a
+ *    different element and every click after the first navigation tested the
+ *    wrong thing.
+ *  - Re-reading a toggle by aria-label finds a *different* control once the
+ *    label flips from "Add to favorites" to "Remove from favorites" — which
+ *    reported a working heart as dead.
+ *  - Four seconds is not enough for a page that fetches from a registry
+ *    routinely taking six.
+ *
+ * Every failure this tool has ever reported was verified by hand before being
+ * acted on, and exactly one was real. Treat its output as a list of things to
+ * check, never as a list of bugs.
  */
 const findings = [];
 const note = (route, level, what, detail = "") =>
@@ -76,9 +92,12 @@ const COLLECT = `(() => {
     if (seen.has(key)) return;
     seen.add(key);
 
-    el.setAttribute('data-audit-id', String(i));
     out.push({
-      id: String(i),
+      // Identified by what it is, not where it was. Index-based ids broke
+      // the moment the page re-rendered differently after a reload: id N
+      // then pointed at a different control, so every click after the first
+      // navigation tested the wrong element and reported a false failure.
+      key: (el.getAttribute('aria-label') || '') + '|' + (el.getAttribute('href') || '') + '|' + label,
       tag: el.tagName.toLowerCase(),
       label,
       href: el.getAttribute('href'),
@@ -165,15 +184,44 @@ for (const route of ROUTES) {
       dialogs: document.querySelectorAll('[role="dialog"]').length,
     }));
 
+    // Find it fresh, scroll it into view, and click its centre with the real
+    // mouse — page.click can land on a sticky header or the bottom bar when
+    // the target sits underneath one.
+    const spot = await page.evaluate((key) => {
+      const el = [...document.querySelectorAll('button, a, [role="button"], input, select, summary')].find(
+        (e) => {
+          if (e.closest('aside')) return false;
+          const label = (e.getAttribute('aria-label') || e.textContent || e.getAttribute('placeholder') || e.tagName)
+            .replace(/\s+/g, ' ').trim().slice(0, 48);
+          return (e.getAttribute('aria-label') || '') + '|' + (e.getAttribute('href') || '') + '|' + label === key;
+        }
+      );
+      if (!el) return null;
+      el.scrollIntoView({ block: 'center' });
+      const box = el.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) return null;
+      return {
+        x: box.x + box.width / 2,
+        y: box.y + box.height / 2,
+        pressed: el.getAttribute('aria-pressed'),
+      };
+    }, c.key);
+
+    if (!spot) {
+      console.log(`   ?    ${c.label}  (gone after reload)`);
+      continue;
+    }
+
     try {
-      await page.click(`[data-audit-id="${c.id}"]`, { delay: 20 });
+      await page.mouse.click(spot.x, spot.y);
     } catch {
-      console.log(`   ?    ${c.label}  (not clickable)`);
       note(route, "WARN", "control could not be clicked", c.label);
       continue;
     }
 
-    await new Promise((r) => setTimeout(r, 700));
+    // Skill pages are rendered on demand and hit a registry that regularly
+    // takes several seconds, so a short wait reports a working link as dead.
+    await new Promise((r) => setTimeout(r, c.href?.startsWith("/skills/") ? 9000 : 4000));
 
     const after = await page.evaluate(() => ({
       url: location.pathname + location.search,
@@ -181,9 +229,22 @@ for (const route of ROUTES) {
       dialogs: document.querySelectorAll('[role="dialog"]').length,
     }));
 
+    // A toggle's DOM change is tiny — a filled heart is a few characters —
+    // so aria-pressed is checked directly rather than inferred from size.
+    const toggled = await page.evaluate((key) => {
+      const el = [...document.querySelectorAll('button, a, [role="button"]')].find((e) => {
+        const label = (e.getAttribute('aria-label') || e.textContent || e.tagName)
+          .replace(/\s+/g, ' ').trim().slice(0, 48);
+        return (e.getAttribute('aria-label') || '') + '|' + (e.getAttribute('href') || '') + '|' + label === key;
+      });
+      // A missing element usually means its own label changed, which is
+      // itself proof the control did something.
+      return el ? el.getAttribute('aria-pressed') : 'label-changed';
+    }, c.key);
+
     const navigated = before.url !== after.url;
     const opened = after.dialogs > before.dialogs;
-    const changed = Math.abs(after.html - before.html) > 40;
+    const changed = Math.abs(after.html - before.html) > 40 || toggled !== spot.pressed;
 
     let verdict;
     if (navigated) verdict = `→ ${after.url}`;
@@ -210,8 +271,7 @@ for (const route of ROUTES) {
     // Return to a known state before the next control.
     if (navigated || opened || changed) {
       await page.goto(BASE + route, { waitUntil: "domcontentloaded", timeout: 30000 });
-      await new Promise((r) => setTimeout(r, 600));
-      await page.evaluate(COLLECT);
+      await new Promise((r) => setTimeout(r, 1500));
     }
   }
 
