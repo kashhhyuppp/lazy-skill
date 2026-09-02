@@ -36,68 +36,76 @@ const rect = (x0, y0, x1, y1, ch, only = null) => {
 };
 
 // ---- hood -------------------------------------------------------------
-// Dome plus a body that flares into shoulders.
-ell(16, 14, 12, 11.5, "H");
-rect(4, 14, 27, 26, "H");
-for (let y = 26; y < H; y++) {
-  const spread = Math.min(13, 9.5 + (y - 26) * 1.4);
+// A rounded hood that frames the face rather than swallowing it.
+ell(16, 13, 12, 11, "H");
+rect(4, 13, 27, 25, "H");
+for (let y = 25; y < H; y++) {
+  const spread = Math.min(13, 9 + (y - 25) * 1.4);
   rect(Math.round(16 - spread), y, Math.round(15 + spread), y, "H");
 }
-// Right side falls into shadow, top-left catches the light.
-ell(22, 16, 10, 12, "h", { only: "H" });
-ell(11, 8, 6.5, 4.5, "L", { only: "H" });
+// Shadow down the right, a soft lit edge along the top-left rim only — a
+// highlight blob in the middle of the hood reads as a stain, not a light.
+ell(22, 15, 10.5, 12, "h", { only: "H" });
+ell(13, 6, 7, 3.2, "L", { only: "H" });
 
-// ---- face opening -----------------------------------------------------
-ell(16, 16.5, 8.8, 8.2, "F", { only: "HhL" });
-// Cheek tufts break the silhouette so it reads as fur, not a helmet.
-[[7.5, 18.5], [7.5, 21], [24.5, 18.5], [24.5, 21]].forEach(([x, y]) => {
-  ell(x, y, 1.5, 1.3, "F", { only: "HhL" });
+// ---- face ---------------------------------------------------------------
+ell(16, 16, 9.2, 8.4, "F", { only: "HhL" });
+// Cheek fur breaking the hood line, so the silhouette is not a plain oval.
+[[6.8, 17.5], [6.8, 20.5], [25.2, 17.5], [25.2, 20.5]].forEach(([x, y]) => {
+  ell(x, y, 1.6, 1.4, "F", { only: "HhL" });
 });
-// Muzzle sits low in the face.
-ell(16, 20.5, 5.0, 3.4, "M", { only: "F" });
+// Muzzle: lighter, low, and wide enough to read at a glance.
+ell(16, 20.5, 4.8, 3.2, "M", { only: "F" });
 
-// ---- eye patches ------------------------------------------------------
-// The dark stripe through the eyes is the sloth's defining marking.
-ell(11.2, 15, 3.0, 2.6, "P", { only: "FM" });
-ell(20.8, 15, 3.0, 2.6, "P", { only: "FM" });
-// The patches taper outward and down, the way the real marking does.
-ell(9.0, 17.5, 1.7, 1.7, "P", { only: "FM" });
-ell(23.0, 17.5, 1.7, 1.7, "P", { only: "FM" });
+// ---- eye patches --------------------------------------------------------
+// The sloth's defining marking. Angled outward and down, and crucially NOT
+// solid: the eye sits inside as a bright shape, or the whole patch reads as
+// a dark rectangle with nothing in it.
+// Kept small and well separated. Wide patches meeting in the middle read as
+// one dark band across the face rather than two eyes.
+ell(11.4, 14.6, 2.6, 2.3, "P", { only: "FM" });
+ell(20.6, 14.6, 2.6, 2.3, "P", { only: "FM" });
+// A short taper down and out, which is what makes it a sloth rather than a
+// bandit mask.
+ell(9.4, 17.2, 1.5, 1.6, "P", { only: "FM" });
+ell(22.6, 17.2, 1.5, 1.6, "P", { only: "FM" });
 
 // ---- eyes -------------------------------------------------------------
-// Only this block varies between expressions; everything else is shared,
-// so Bit stays recognisably the same character in every state.
+// Only this block varies between expressions; everything else is shared, so
+// Bit stays recognisably the same character in every state.
+//
+// A closed eye is a bright lid line against the dark patch. Drawn in another
+// dark brown it disappears, and the patch reads as an empty rectangle — which
+// is exactly what made the face look like a blob.
 const shut = () => {
-  rect(9, 15, 13, 15, "e", "P");
-  rect(19, 15, 23, 15, "e", "P");
-  put(8, 14, "e");
-  put(24, 14, "e");
-  put(14, 14, "e");
-  put(18, 14, "e");
+  rect(10, 14, 13, 14, "w", "P");
+  rect(19, 14, 22, 14, "w", "P");
+  rect(10, 15, 13, 15, "e", "P");
+  rect(19, 15, 22, 15, "e", "P");
 };
-const open = (r = 1.2) => {
-  ell(11.2, 15, r, r, "w", { only: "P" });
-  ell(20.8, 15, r, r, "w", { only: "P" });
-  ell(11.4, 15.2, r * 0.6, r * 0.6, "e", { only: "w" });
-  ell(21.0, 15.2, r * 0.6, r * 0.6, "e", { only: "w" });
+const open = (r = 1.5) => {
+  ell(11.4, 14.6, r, r, "w", { only: "P" });
+  ell(20.6, 14.6, r, r, "w", { only: "P" });
+  ell(11.6, 14.8, r * 0.55, r * 0.55, "e", { only: "w" });
+  ell(20.8, 14.8, r * 0.55, r * 0.55, "e", { only: "w" });
 };
 const squint = () => {
-  rect(9, 14, 13, 15, "e", "P");
-  rect(19, 14, 23, 15, "e", "P");
+  rect(10, 14, 13, 14, "w", "P");
+  rect(19, 14, 22, 14, "w", "P");
 };
 
 switch (expression) {
   case "curious":
-    open(1.5);
+    open(1.8);
     break;
   case "happy":
   case "excited":
-    open(1.2);
+    open(1.5);
     break;
   case "waiting":
     shut();
-    ell(20.5, 15.5, 1.2, 1.2, "w", { only: "P" });
-    ell(20.7, 15.7, 0.8, 0.8, "e", { only: "w" });
+    open(1.4);
+    rect(10, 14, 13, 15, "e", "w");
     break;
   case "working":
   case "annoyed":
@@ -107,13 +115,13 @@ switch (expression) {
     shut();
 }
 
-// ---- nose + mouth -----------------------------------------------------
-// A compact nose with a narrow smile tucked directly beneath it, so the
-// features stay legible once the sprite is scaled down to 32px.
-rect(15, 18, 16, 19, "n", "MF");
-put(14, 21, "n");
-put(17, 21, "n");
-rect(15, 22, 16, 22, "n", "M");
+// ---- nose + mouth -------------------------------------------------------
+rect(14, 18, 17, 19, "n", "MF");
+put(15, 20, "n");
+put(16, 20, "n");
+put(13, 21, "n");
+put(18, 21, "n");
+rect(14, 22, 17, 22, "n", "M");
 
 // ---- outline ----------------------------------------------------------
 // One-pixel dark edge wherever a lit cell touches transparency.

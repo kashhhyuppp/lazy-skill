@@ -47,7 +47,7 @@ export async function themeCommand(requested: string | undefined, version: strin
       // padding a coloured string leaves the column ragged.
       const padded = t.label.padEnd(14);
       const label = active ? style.bold(padded) : style.gray(padded);
-        const beside = i >= 1 && i <= 5 ? "  " + bit[i - 1] : "";
+        const beside = i >= 1 && i <= 6 ? "  " + bit[i - 1] : "";
         out.push(`  ${pointer(active)} ${mark} ${rgb(t.accent, "████")}  ${label}${beside}`);
       });
 

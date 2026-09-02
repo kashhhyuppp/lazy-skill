@@ -48,21 +48,37 @@ export function banner(theme: Theme, version: string): string[] {
 }
 
 /**
- * Bit, in blocks, for sitting beside things.
+ * Bit, hand-drawn.
  *
- * A deliberately small silhouette — the hood, the closed eyes, the muzzle.
- * Anything more detailed turns to mush at terminal resolution.
+ * The generated 32x32 sprite is right for the phone, where there is
+ * resolution to spare. In a terminal it turned to mush: ellipses at that
+ * scale produce a cream blob with dark smears, and no amount of nudging the
+ * shapes fixed it. This is drawn character by character instead — a hood, a
+ * face, two closed eyes, a nose and a smile — which is far fewer pixels but
+ * reads instantly, which is the only thing that matters here.
+ *
+ * Every row is exactly 13 cells wide. Ragged rows shear the silhouette, and
+ * the colour codes make that impossible to spot by eye.
  */
+const FACE: [number, number, number] = [227, 201, 164];
+const FEATURE: [number, number, number] = [70, 48, 35];
+
 export function mascot(theme: Theme, awake = false): string[] {
   const hood = (t: string) => rgb(theme.accent, t);
-  // Every row is exactly ten cells wide. Ragged rows shear the silhouette,
-  // and the colour codes make it impossible to eyeball.
-  const eyes = awake ? `${style.bold("o")}  ${style.bold("o")}` : "-  -";
+  const face = (t: string) => rgb(FACE, t);
+  const mark = (t: string) => rgb(FEATURE, t);
+  const zzz = (t: string) => rgb(theme.support, t);
+
+  // Open eyes are dots; closed eyes are the lower half of a block, which
+  // reads as a lid rather than a gap.
+  const eyes = awake ? mark("●●") : mark("▄▄");
+
   return [
-    hood("  ▄████▄  "),
-    hood(" ██") + style.gray("‾‾‾‾") + hood("██ "),
-    hood(" █ ") + eyes + hood(" █ "),
-    hood(" █  ") + style.gray("‿‿") + hood("  █ "),
-    hood("  ▀████▀  "),
+    hood("   ▄▄▄▄▄▄▄   "),
+    hood("  █") + face("███████") + hood("█  "),
+    hood("  █") + face("█") + eyes + face("█") + eyes + face("█") + hood("█  ") + (awake ? "" : zzz("z")),
+    hood("  █") + face("███") + mark("▾") + face("███") + hood("█  ") + (awake ? "" : zzz("z")),
+    hood("  █") + face("██") + mark("‿‿‿") + face("██") + hood("█  "),
+    hood("   ▀▀▀▀▀▀▀   "),
   ];
 }

@@ -10,7 +10,7 @@ import { banner, mascot } from "../ui/banner.js";
 import { messages } from "../ui/messages.js";
 import { Spinner } from "../ui/spinner.js";
 
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 
 interface StartResponse {
   code: string;

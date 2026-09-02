@@ -15,6 +15,8 @@
 export const SPRITE_SIZE = 32;
 
 /** Palette keys resolve against CSS custom properties, so themes apply free. */
+/** Terminal colours are literal RGB — no CSS variables to resolve. The hood
+ * is substituted per theme at render time; everything else is fixed. */
 export const PX: Record<string, string | null> = {
   ".": null,
   o: "#120d1c",

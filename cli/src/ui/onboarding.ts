@@ -32,7 +32,7 @@ export async function chooseTheme(version: string): Promise<ThemeId> {
       const padded = t.label.padEnd(14);
       const label = active ? style.bold(padded) : style.gray(padded);
       // The mascot sits beside the list, aligned to its middle rows.
-      const beside = i >= 1 && i <= 5 ? "  " + bit[i - 1] : "";
+      const beside = i >= 1 && i <= 6 ? "  " + bit[i - 1] : "";
       out.push(`  ${pointer(active)} ${swatch}  ${label}${beside}`);
     });
 

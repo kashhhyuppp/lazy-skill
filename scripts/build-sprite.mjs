@@ -64,4 +64,16 @@ export function spriteRows(expression: Expression): string[] {
 `;
 
 writeFileSync(new URL("../src/components/brand/sprite-data.ts", import.meta.url), body);
-console.log(`wrote sprite-data.ts — ${EXPRESSIONS.length} expressions @ ${SIZE}x${SIZE}`);
+
+// The CLI ships as its own package and cannot import from the app, so it gets
+// a generated copy from the same source. Both are regenerated together, so
+// the mascot can never differ between the terminal and the phone.
+const cliBody = body.replace(
+  'export const PX: Record<string, string | null> = {',
+  `/** Terminal colours are literal RGB — no CSS variables to resolve. The hood
+ * is substituted per theme at render time; everything else is fixed. */
+export const PX: Record<string, string | null> = {`
+);
+writeFileSync(new URL("../cli/src/ui/sprite-data.ts", import.meta.url), cliBody);
+
+console.log(`wrote sprite-data.ts (app + cli) — ${EXPRESSIONS.length} expressions @ ${SIZE}x${SIZE}`);
