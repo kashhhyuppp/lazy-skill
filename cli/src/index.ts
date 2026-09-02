@@ -8,18 +8,20 @@ import { skillsCommand } from "./commands/skills.js";
 import { installCommand } from "./commands/install.js";
 import { themeCommand } from "./commands/theme.js";
 import { listenCommand } from "./commands/listen.js";
+import { warnIfOutdated } from "./lib/version-check.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.1";
 
 function help(): void {
   const theme = THEMES[readConfig().theme];
-  const cmd = (name: string) => rgb(theme.accent, name.padEnd(24));
+  const cmd = (name: string) => rgb(theme.accent, name.padEnd(26));
 
   console.log(`
   ${style.bold("LAZY")} ${rgb(theme.accent, style.bold("SKILL"))}${rgb(theme.support, " Zz")}   ${style.gray("See it. Search it. Install it.")}
 
   ${style.bold("Usage")}
-    ${cmd("lazy-skill connect")}Pair, then wait for installs
+    ${cmd("lazy-skill")}Connect, or listen if already paired
+    ${cmd("lazy-skill connect")}Pair again, then wait for installs
     ${cmd("lazy-skill listen")}Wait for installs sent from your phone
     ${cmd("lazy-skill status")}Show connection and detected tools
     ${cmd("lazy-skill skills")}List skills installed on this computer
@@ -51,12 +53,26 @@ async function main(): Promise<number> {
     console.log(VERSION);
     return 0;
   }
-  if (!command || flags.has("-h") || flags.has("--help") || command === "help") {
+  if (flags.has("-h") || flags.has("--help") || command === "help") {
     help();
     return 0;
   }
 
   const verbose = flags.has("-v") || flags.has("--verbose");
+
+  // Bare `npx lazy-skill` does the thing rather than printing a menu. The
+  // product is one command, a QR, and you are done — making people discover a
+  // subcommand first is the friction it exists to remove. An already-paired
+  // computer skips straight to listening instead of pairing again.
+  // Only for the long-running commands: a stale copy matters most when the
+  // user is about to sit and wait for something that will never work.
+  const longRunning = !command || command === "connect" || command === "listen";
+  if (longRunning) await warnIfOutdated(VERSION, THEMES[readConfig().theme]);
+
+  if (!command) {
+    if (readConfig().deviceToken) return listenCommand({ once: flags.has("--once") });
+    return connectCommand({ verbose, listen: !flags.has("--no-listen") });
+  }
 
   switch (command) {
     case "connect":
