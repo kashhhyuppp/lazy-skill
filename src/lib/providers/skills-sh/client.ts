@@ -44,13 +44,31 @@ export function isConfigured(): boolean {
   return Boolean(process.env.VERCEL_OIDC_TOKEN) || process.env.VERCEL === "1";
 }
 
+/**
+ * Cached across requests in the same instance. The token is short-lived, so
+ * it is re-read well before Vercel would rotate it.
+ */
+let cachedToken: { value: string; expiresAt: number } | null = null;
+const TOKEN_TTL_MS = 5 * 60 * 1000;
+
 async function authToken(): Promise<string> {
-  // The helper refreshes an expired token in local development; in production
-  // it reads the value Vercel injects per invocation.
-  const token = await getVercelOidcToken();
+  if (cachedToken && cachedToken.expiresAt > Date.now()) return cachedToken.value;
+
+  // Read the injected value first.
+  //
+  // Vercel puts a fresh token in the environment on every invocation, and
+  // reading it costs nothing. The helper is the fallback for local
+  // development, where it refreshes an expired token — but on a cold instance
+  // it can take ten seconds or more, which is long enough to look like a hang
+  // and to time out a page build.
+  const injected = process.env.VERCEL_OIDC_TOKEN;
+  const token = injected || (await getVercelOidcToken());
+
   if (!token) {
     throw new SkillsApiError(401, "no_token", "No Vercel OIDC token available.");
   }
+
+  cachedToken = { value: token, expiresAt: Date.now() + TOKEN_TTL_MS };
   return token;
 }
 
@@ -58,13 +76,24 @@ interface RequestOptions {
   /** Seconds. Registry data is not volatile; caching keeps us far under the
    *  600 req/min budget and makes repeat searches instant. */
   revalidate?: number;
-  signal?: AbortSignal;
+  timeoutMs?: number;
 }
+
+/**
+ * Nothing upstream gets to hang us.
+ *
+ * Without a bound, a stalled registry call blocks whatever is waiting on it.
+ * That took down a production build: prerendering tried to reach the registry,
+ * the call never returned, and the page timed out after sixty seconds — three
+ * times, then the deploy failed. A request that is slow enough to matter has
+ * already failed, so treat it as failed and let the caller fall back.
+ */
+const DEFAULT_TIMEOUT_MS = 6000;
 
 export async function apiGet<T>(
   path: string,
   params: Record<string, string | number | undefined> = {},
-  { revalidate = 300, signal }: RequestOptions = {}
+  { revalidate = 300, timeoutMs = DEFAULT_TIMEOUT_MS }: RequestOptions = {}
 ): Promise<T> {
   const base = process.env.SKILLS_API_BASE_URL || DEFAULT_BASE;
   const url = new URL(base.replace(/\/$/, "") + path);
@@ -72,13 +101,36 @@ export async function apiGet<T>(
     if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
   }
 
-  const token = await authToken();
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-    next: { revalidate },
-    signal,
+  // The timeout is a race, not an AbortSignal.
+  //
+  // Next patches fetch to add its data cache, and that path does not wire an
+  // abort signal through — passing `signal` together with `next` makes the
+  // request never settle at all. That is worse than having no timeout: it
+  // turned every registry call into a guaranteed hang and took the build down
+  // with it. Racing leaves caching intact and still bounds the wait.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new SkillsApiError(504, "timeout", `Registry did not answer within ${timeoutMs}ms.`)),
+      timeoutMs
+    );
   });
+
+  const attempt = (async () => {
+    // The token helper reaches out to Vercel, so it is inside the budget.
+    const token = await authToken();
+    return fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      next: { revalidate },
+    });
+  })();
+
+  let res: Response;
+  try {
+    res = await Promise.race([attempt, expired]);
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     let code = "http_error";

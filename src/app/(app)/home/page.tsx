@@ -14,6 +14,11 @@ import { Mascot } from "@/components/brand/mascot";
 import { DemoDataBanner, SourceNote } from "@/components/layout/data-banner";
 import { HomeSearch } from "./home-search";
 
+// Rendered per request, never at build time. This page depends on the
+// signed-in session and on live registry data, and reaching the registry
+// during prerendering is what timed the build out.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Home" };
 
 /**

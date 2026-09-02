@@ -31,4 +31,10 @@ export function getProviderInfo() {
   return { id: p.id, label: p.label, isDemo: p.isDemo, capabilities: p.capabilities };
 }
 
+/** Why the live registry was last refused, if it was. Diagnostics only. */
+export function getProviderFallbackReason(): string | null {
+  const p = getSkillsProvider() as { lastError?: string | null };
+  return p.lastError ?? null;
+}
+
 export type ProviderInfo = ReturnType<typeof getProviderInfo>;

@@ -13,8 +13,21 @@ import type { ProviderCapabilities, SkillsProvider } from "./types";
  * Capabilities follow whichever provider actually answered, so the UI keeps
  * hiding controls the live source cannot honour.
  */
+/**
+ * How long to stop calling a failing registry.
+ *
+ * Without this, every visitor pays the full timeout before falling back —
+ * a ten-second wait on every page load, repeated for a source we already
+ * know is not answering. One request finds out; the rest are served
+ * immediately from samples until the window passes.
+ */
+const COOLDOWN_MS = 60_000;
+
 export class FallbackSkillsProvider implements SkillsProvider {
   private degraded = false;
+  private cooldownUntil = 0;
+  /** Why the live provider was last refused, for diagnostics. */
+  lastError: string | null = null;
 
   constructor(
     private readonly live: SkillsProvider,
@@ -41,15 +54,24 @@ export class FallbackSkillsProvider implements SkillsProvider {
     run: (provider: SkillsProvider) => Promise<T>,
     label: string
   ): Promise<T> {
+    // Still inside the cooldown: do not make the user wait to rediscover a
+    // failure we recorded a moment ago.
+    if (this.cooldownUntil > Date.now()) {
+      return run(this.backup);
+    }
+
     try {
       const result = await run(this.live);
       this.degraded = false;
+      this.cooldownUntil = 0;
       return result;
     } catch (err) {
       // Logged rather than swallowed: silently serving samples in production
       // is the exact failure this class exists to make visible.
       console.error(`[skills] live registry ${label} failed, serving samples:`, err);
+      this.lastError = `${(err as Error)?.name ?? "Error"}: ${(err as Error)?.message ?? String(err)}`.slice(0, 300);
       this.degraded = true;
+      this.cooldownUntil = Date.now() + COOLDOWN_MS;
       return run(this.backup);
     }
   }

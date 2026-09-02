@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSkillsProvider } from "@/lib/providers";
+import { getProviderFallbackReason, getSkillsProvider } from "@/lib/providers";
 import { CATEGORY_IDS, AGENT_IDS, type CategoryId, type AgentId } from "@/types/skill";
 
 /**
@@ -34,7 +34,15 @@ export async function GET(request: Request) {
     ? await provider.search({ q, category, agent, page, perPage: 24 })
     : await provider.list({ view: view ?? "trending", category, agent, page, perPage: 24 });
 
-  return NextResponse.json(result, {
-    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
-  });
+  const headers: Record<string, string> = {
+    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+  };
+
+  // Surfaced as a header rather than in the body: it is an operational
+  // signal, not part of the API, and it stops a silent fallback from looking
+  // like a normal empty-ish result.
+  const reason = getProviderFallbackReason();
+  if (reason) headers["x-skills-fallback"] = reason.replace(/[^\x20-\x7e]/g, " ");
+
+  return NextResponse.json(result, { headers });
 }
