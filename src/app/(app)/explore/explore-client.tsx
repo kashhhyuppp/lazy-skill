@@ -70,7 +70,7 @@ export function ExploreClient({
   );
 
   const untouched = !q && view === "trending" && !category && !agent;
-  const { data, loading, error } = useSkillSearch(
+  const { data, loading, loadingMore, error, loadMore } = useSkillSearch(
     { q, view, category, agent },
     untouched ? initial : undefined
   );
@@ -217,6 +217,7 @@ export function ExploreClient({
           <p className="font-mono text-[11px] text-faint">
             {skills.length} skill{skills.length === 1 ? "" : "s"}
             {q && ` for "${q}"`}
+            {data?.hasMore ? " so far" : ""}
           </p>
           <div
             className={cn(
@@ -228,6 +229,14 @@ export function ExploreClient({
               <SkillCard key={s.id} skill={s} />
             ))}
           </div>
+
+          {data?.hasMore && (
+            <div className="flex justify-center pt-2">
+              <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? "Loading..." : "Load more skills"}
+              </Button>
+            </div>
+          )}
         </>
       )}
     </div>

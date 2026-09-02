@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { SkillSigil } from "./skill-sigil";
 import { CompatBadges } from "./compat-badges";
 import { useFavorites } from "./favorites-provider";
+import { useInstall } from "@/components/install/install-provider";
 
 /**
  * The inventory item. Hover lifts the slab and runs a light sheen across it;
@@ -17,6 +18,7 @@ import { useFavorites } from "./favorites-provider";
  */
 export function SkillCard({ skill, compact = false }: { skill: Skill; compact?: boolean }) {
   const { isFavorite, toggle } = useFavorites();
+  const { open: openInstall } = useInstall();
   const faved = isFavorite(skill.id);
 
   return (
@@ -114,7 +116,13 @@ export function SkillCard({ skill, compact = false }: { skill: Skill; compact?: 
               size="sm"
               pixel
               className="relative z-10 text-[10px]"
-              onClick={(e) => e.preventDefault()}
+              onClick={(e) => {
+                // The card is one big link to the detail page, so the button
+                // has to stop that before opening the sheet.
+                e.preventDefault();
+                e.stopPropagation();
+                openInstall({ id: skill.id, name: skill.name });
+              }}
             >
               INSTALL
             </Button>
