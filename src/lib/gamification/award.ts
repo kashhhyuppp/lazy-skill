@@ -1,15 +1,24 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { XP, questForDate, type XpKind } from "./rules";
-import { levelForXp } from "./levels";
+import type { XpKind } from "./rules";
 
 /**
  * The server-side half of the XP system.
  *
- * These helpers are only ever called from inside the server action that
- * performs the underlying deed. There is no route or action that grants XP on
- * its own, and `award_xp` attributes every event to `auth.uid()` rather than a
- * parameter — so a client cannot mint points or award them to someone else.
+ * `award_xp` is the only reward function a client can reach, and it decides
+ * everything itself: the amount comes from `xp_rules`, the quest from
+ * `todays_quest()`, and achievements from stored state. The caller says only
+ * *what happened* and *to which subject*, and the database refuses the award
+ * outright if no such favorite, collection or installation exists for that
+ * user.
+ *
+ * It used to take the amount as a parameter, with `advance_quest` and
+ * `unlock_achievement` exposed alongside it. Since those are `security
+ * definer` functions granted to `authenticated`, a signed-in user could call
+ * them straight from devtools: the security review confirmed 2,500 XP and the
+ * top leaderboard place from 25 calls with invented subject ids, plus badges
+ * for codes that do not exist. Both helpers are now folded in here and
+ * revoked, so the only way to earn is to do the thing.
  */
 
 export interface AwardOutcome {
@@ -31,7 +40,8 @@ const EMPTY: AwardOutcome = {
 /**
  * Records an earned action: XP, streak, today's quest, and any achievement it
  * unlocks. Never throws — a points failure must not roll back the favorite
- * the user actually asked for.
+ * the user actually asked for, and a rejected award is a normal outcome now
+ * that the database verifies the deed.
  */
 export async function recordAction(
   supabase: SupabaseClient,
@@ -41,70 +51,21 @@ export async function recordAction(
   try {
     const { data, error } = await supabase.rpc("award_xp", {
       p_kind: kind,
-      p_amount: XP[kind],
       p_subject_id: subjectId,
     });
     if (error) return EMPTY;
 
     const row = Array.isArray(data) ? data[0] : data;
-    const outcome: AwardOutcome = {
-      awarded: Boolean(row?.awarded),
-      totalXp: Number(row?.total_xp ?? 0),
-      currentStreak: Number(row?.current_streak ?? 0),
-      questCompleted: false,
-      unlocked: [],
+    if (!row) return EMPTY;
+
+    return {
+      awarded: Boolean(row.awarded),
+      totalXp: Number(row.total_xp ?? 0),
+      currentStreak: Number(row.current_streak ?? 0),
+      questCompleted: Boolean(row.quest_completed),
+      unlocked: Array.isArray(row.unlocked) ? (row.unlocked as string[]) : [],
     };
-
-    // A repeat action still counts for the streak, but must not advance a
-    // quest — otherwise re-favouriting one skill would finish "favorite 5".
-    if (outcome.awarded) {
-      outcome.questCompleted = await advanceTodaysQuest(supabase, kind);
-    }
-
-    outcome.unlocked = await syncAchievements(supabase, outcome);
-    return outcome;
   } catch {
     return EMPTY;
   }
-}
-
-async function advanceTodaysQuest(supabase: SupabaseClient, kind: XpKind): Promise<boolean> {
-  const quest = questForDate();
-  if (quest.kind !== kind) return false;
-
-  const { data, error } = await supabase.rpc("advance_quest", {
-    p_quest_code: quest.code,
-    p_target: quest.target,
-    p_reward: XP.quest_completed,
-  });
-  if (error) return false;
-
-  const row = Array.isArray(data) ? data[0] : data;
-  return Boolean(row?.completed);
-}
-
-/**
- * Evaluates the achievements whose conditions are cheap to check from state we
- * already have. Unlocking is idempotent, so re-running is harmless.
- */
-async function syncAchievements(
-  supabase: SupabaseClient,
-  outcome: AwardOutcome
-): Promise<string[]> {
-  const earned: string[] = [];
-
-  const unlock = async (code: string) => {
-    const { data } = await supabase.rpc("unlock_achievement", { p_code: code });
-    if (data === true) earned.push(code);
-  };
-
-  if (outcome.currentStreak >= 7) await unlock("on_fire");
-  if (levelForXp(outcome.totalXp) >= 25) await unlock("power_user");
-
-  const { count } = await supabase
-    .from("collections")
-    .select("id", { count: "exact", head: true });
-  if ((count ?? 0) >= 3) await unlock("collector");
-
-  return earned;
 }
