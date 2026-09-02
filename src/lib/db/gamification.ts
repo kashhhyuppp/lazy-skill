@@ -1,4 +1,6 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
+import { createPublicClient } from "@/lib/supabase/public";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { levelProgress, type LevelProgress } from "@/lib/gamification/levels";
 import { questForDate, todayUtc } from "@/lib/gamification/rules";
@@ -111,11 +113,38 @@ const VIEW: Record<LeaderboardPeriod, string> = {
   monthly: "leaderboard_monthly",
 };
 
+/**
+ * The board is the same for every visitor, so it is fetched without a session
+ * and shared for a minute rather than recomputed per request.
+ *
+ * Measured before this: /leaderboard answered in 550-1050ms against ~330ms for
+ * every other page, despite the view itself running in 76ms. The cost was
+ * re-establishing the session and re-running the ranking on each request for a
+ * result nobody needs to the second.
+ *
+ * `unstable_cache` rather than `use cache`: the newer directive needs
+ * `cacheComponents` enabled for the whole app, which changes how every route
+ * renders. That is worth doing deliberately, not as a side effect of speeding
+ * up one page.
+ */
+const cachedBoard = unstable_cache(
+  async (period: LeaderboardPeriod, limit: number) => fetchBoard(period, limit),
+  ["leaderboard"],
+  { revalidate: 60, tags: ["leaderboard"] }
+);
+
 export async function getLeaderboard(
   period: LeaderboardPeriod = "all-time",
   limit = 25
 ): Promise<LeaderboardRow[]> {
-  const supabase = await createClient();
+  return cachedBoard(period, limit);
+}
+
+async function fetchBoard(
+  period: LeaderboardPeriod,
+  limit: number
+): Promise<LeaderboardRow[]> {
+  const supabase = createPublicClient();
   if (!supabase) return [];
 
   const { data, error } = await supabase
