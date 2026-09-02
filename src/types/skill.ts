@@ -155,4 +155,12 @@ export interface SkillPage {
   providerId: string;
   /** True when every record in this page is sample content. */
   isDemo: boolean;
+  /**
+   * True when samples were served because the live source failed, rather than
+   * because this deployment has no live source configured.
+   *
+   * The difference matters to the user: "no results for docker" is a lie when
+   * we never actually managed to search.
+   */
+  degraded?: boolean;
 }

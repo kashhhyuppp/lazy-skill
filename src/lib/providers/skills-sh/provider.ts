@@ -11,6 +11,14 @@ import type {
   ListView,
 } from "./types";
 
+/**
+ * How many search hits to ask for.
+ *
+ * The endpoint's ceiling is 200, but larger responses measurably slow it
+ * down, and 100 already covers any query a person will scroll through.
+ */
+const SEARCH_LIMIT = 100;
+
 /** Our sort names -> the registry's `view` parameter. */
 const VIEW: Record<string, ListView> = {
   trending: "trending",
@@ -67,13 +75,20 @@ export class SkillsShProvider implements SkillsProvider {
     // a request on a guaranteed 400.
     if (q.length < 2) return this.list(query);
 
-    const perPage = Math.min(200, Math.max(1, query.perPage ?? 24));
-    const res = await apiGet<ApiSearchResponse>("/skills/search", { q, limit: perPage });
+    // The search endpoint takes a limit but has no page parameter, so results
+    // cannot be paged through — whatever is asked for here is all the user
+    // will ever see. Asking for a browse-sized page meant every search
+    // stopped at 24 hits with no way to reach the rest, which reads as "that
+    // is all there is". Ask for the registry's documented maximum instead and
+    // return the lot.
+    const limit = SEARCH_LIMIT;
+    const res = await apiGet<ApiSearchResponse>("/skills/search", { q, limit });
 
     return {
       skills: res.data.map((s) => mapSkill(s)),
       page: 0,
-      perPage,
+      perPage: res.data.length,
+      // Genuinely no more to fetch: there is no next page to ask for.
       hasMore: false,
       providerId: this.id,
       isDemo: false,

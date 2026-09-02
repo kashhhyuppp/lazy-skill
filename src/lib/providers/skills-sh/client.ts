@@ -80,15 +80,18 @@ interface RequestOptions {
 }
 
 /**
- * Nothing upstream gets to hang us.
+ * Nothing upstream gets to hang us — but the bound has to fit the source.
  *
- * Without a bound, a stalled registry call blocks whatever is waiting on it.
- * That took down a production build: prerendering tried to reach the registry,
- * the call never returned, and the page timed out after sixty seconds — three
- * times, then the deploy failed. A request that is slow enough to matter has
- * already failed, so treat it as failed and let the caller fall back.
+ * Without any bound, a stalled call blocks whatever waits on it, which took a
+ * production build down. With too tight a bound, perfectly good calls get
+ * cut off and the user silently gets sample data instead of real results.
+ *
+ * Measured against the registry: identical search requests came back in
+ * 0.9s, 6.2s, 0.9s and 5.8s. It is not down, it is erratic — so the budget
+ * has to clear its slow end rather than its median, or roughly half of all
+ * searches would be thrown away.
  */
-const DEFAULT_TIMEOUT_MS = 6000;
+const DEFAULT_TIMEOUT_MS = 15_000;
 
 export async function apiGet<T>(
   path: string,

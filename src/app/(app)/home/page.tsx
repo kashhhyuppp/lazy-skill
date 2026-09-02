@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PixelProgress } from "@/components/ui/progress";
 import { SkillCard } from "@/components/skills/skill-card";
 import { Mascot } from "@/components/brand/mascot";
-import { DemoDataBanner, SourceNote } from "@/components/layout/data-banner";
+import { DemoDataBanner, RegistryDownNotice, SourceNote } from "@/components/layout/data-banner";
 import { HomeSearch } from "./home-search";
 
 // Rendered per request, never at build time. This page depends on the
@@ -130,7 +130,13 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {trending.isDemo ? <DemoDataBanner /> : <SourceNote label={provider.label} />}
+        {trending.degraded ? (
+          <RegistryDownNotice />
+        ) : trending.isDemo ? (
+          <DemoDataBanner />
+        ) : (
+          <SourceNote label={provider.label} />
+        )}
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {trending.skills.map((s) => (

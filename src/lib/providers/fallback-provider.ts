@@ -21,7 +21,7 @@ import type { ProviderCapabilities, SkillsProvider } from "./types";
  * know is not answering. One request finds out; the rest are served
  * immediately from samples until the window passes.
  */
-const COOLDOWN_MS = 60_000;
+const COOLDOWN_MS = 20_000;
 
 export class FallbackSkillsProvider implements SkillsProvider {
   private degraded = false;
@@ -57,13 +57,16 @@ export class FallbackSkillsProvider implements SkillsProvider {
     // Still inside the cooldown: do not make the user wait to rediscover a
     // failure we recorded a moment ago.
     if (this.cooldownUntil > Date.now()) {
-      return run(this.backup);
+      return this.markDegraded(await run(this.backup));
     }
 
     try {
       const result = await run(this.live);
       this.degraded = false;
       this.cooldownUntil = 0;
+      // Cleared on success, or the diagnostic header outlives the problem and
+      // reports a failure that is no longer happening.
+      this.lastError = null;
       return result;
     } catch (err) {
       // Logged rather than swallowed: silently serving samples in production
@@ -72,8 +75,16 @@ export class FallbackSkillsProvider implements SkillsProvider {
       this.lastError = `${(err as Error)?.name ?? "Error"}: ${(err as Error)?.message ?? String(err)}`.slice(0, 300);
       this.degraded = true;
       this.cooldownUntil = Date.now() + COOLDOWN_MS;
-      return run(this.backup);
+      return this.markDegraded(await run(this.backup));
     }
+  }
+
+  /** Tags a sample page so the UI can say why it is samples. */
+  private markDegraded<T>(result: T): T {
+    if (result && typeof result === "object" && "skills" in result) {
+      (result as unknown as SkillPage).degraded = true;
+    }
+    return result;
   }
 
   list(query: SkillQuery): Promise<SkillPage> {

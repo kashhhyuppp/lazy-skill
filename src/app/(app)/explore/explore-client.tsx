@@ -17,7 +17,7 @@ import { SearchBar } from "@/components/search/search-bar";
 import { SkillCard } from "@/components/skills/skill-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { DemoDataBanner, SourceNote } from "@/components/layout/data-banner";
+import { DemoDataBanner, RegistryDownNotice, SourceNote } from "@/components/layout/data-banner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -182,7 +182,13 @@ export function ExploreClient({
         )}
       </div>
 
-      {data?.isDemo ? <DemoDataBanner /> : <SourceNote label={provider.label} />}
+      {data?.degraded ? (
+        <RegistryDownNotice />
+      ) : data?.isDemo ? (
+        <DemoDataBanner />
+      ) : (
+        <SourceNote label={provider.label} />
+      )}
 
       {error ? (
         <EmptyState
@@ -202,16 +208,29 @@ export function ExploreClient({
           ))}
         </div>
       ) : skills.length === 0 ? (
-        <EmptyState
-          expression="curious"
-          title="NOTHING MATCHED."
-          body={`No skill here answers to "${q}". Try fewer words.`}
-          action={
-            <Button variant="secondary" onClick={() => setQ("")}>
-              Clear search
-            </Button>
-          }
-        />
+        data?.degraded ? (
+          <EmptyState
+            expression="annoyed"
+            title="SEARCH IS DOWN RIGHT NOW."
+            body="The skill registry isn't answering, so we can't look this up. Nothing is wrong with your search — try again in a minute."
+            action={
+              <Button variant="secondary" onClick={() => setQ((v) => v)}>
+                Try again
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            expression="curious"
+            title="NOTHING MATCHED."
+            body={`No skill here answers to "${q}". Try fewer words.`}
+            action={
+              <Button variant="secondary" onClick={() => setQ("")}>
+                Clear search
+              </Button>
+            }
+          />
+        )
       ) : (
         <>
           <p className="font-mono text-[11px] text-faint">
