@@ -6,6 +6,7 @@ import { Mail } from "lucide-react";
 import { GithubMark } from "@/components/brand/github-mark";
 import { GoogleMark } from "@/components/brand/google-mark";
 import { createClient } from "@/lib/supabase/client";
+import { EMAIL_SIGN_IN_ENABLED } from "@/lib/auth-options";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { Mascot } from "@/components/brand/mascot";
@@ -136,6 +137,8 @@ export function LoginForm({ configured }: { configured: boolean }) {
         ))}
       </div>
 
+      {EMAIL_SIGN_IN_ENABLED && (
+        <>
       <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-line" />
         <span className="font-mono text-[11px] text-faint">or</span>
@@ -161,6 +164,8 @@ export function LoginForm({ configured }: { configured: boolean }) {
           {status === "working" ? "Sending..." : "Email me a link"}
         </Button>
       </form>
+        </>
+      )}
 
       {error && (
         <p className="mt-4 rounded-lg border border-fail/35 bg-fail/10 px-3 py-2.5 text-[12px] text-fail">
