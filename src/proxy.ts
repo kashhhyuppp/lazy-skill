@@ -9,24 +9,18 @@ import { createServerClient } from "@supabase/ssr";
  * filename both have to change or it silently stops running.
  */
 
-/**
- * Browsable without an account.
- *
- * Searching is the thing people are told about, so meeting a login wall
- * before you have seen a single skill costs the visit. These pages read from
- * a public registry and a table whose policy is `using (true)`, so there is
- * nothing here to protect — the gate belongs at install, not at look.
- */
-const PUBLIC_BROWSE = ["/explore", "/category", "/skills", "/leaderboard"];
-
-/** Everything that is genuinely yours, and so needs an account. */
+/** Everything behind the front door. */
 const PROTECTED = [
   "/home",
+  "/explore",
   "/favorites",
   "/library",
   "/profile",
   "/devices",
+  "/leaderboard",
   "/collections",
+  "/category",
+  "/skills",
   "/pair",
   "/p",
 ];
@@ -66,10 +60,6 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  // A public page is public even when signed out, and still renders normally
-  // when signed in — the install button is what asks for an account.
-  if (PUBLIC_BROWSE.some((prefix) => covers(prefix, path))) return response;
 
   const isProtected = PROTECTED.some((prefix) => covers(prefix, path));
   if (!isProtected) return response;
