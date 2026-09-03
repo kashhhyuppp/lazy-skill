@@ -15,6 +15,7 @@ const ERRORS: Record<string, string> = {
   missing_code: "That sign-in link was incomplete. Try again.",
   exchange_failed: "That link expired. Ask for a fresh one.",
   unconfigured: "Accounts are not set up on this deployment yet.",
+  provider: "",
 };
 
 /**
@@ -37,7 +38,12 @@ export function LoginForm({ configured }: { configured: boolean }) {
   const [email, setEmail] = React.useState("");
   const [status, setStatus] = React.useState<"idle" | "working" | "sent">("idle");
   const [pending, setPending] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(ERRORS[params.get("error") ?? ""] ?? null);
+  // A provider's own words beat a generic message: "access_denied" or
+  // "redirect_uri_mismatch" tells you what to fix, "try again" does not.
+  const reported = params.get("message");
+  const [error, setError] = React.useState<string | null>(
+    (ERRORS[params.get("error") ?? ""] || reported) ?? null
+  );
 
   const redirectTo = () =>
     `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;

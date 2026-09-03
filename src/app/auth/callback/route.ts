@@ -14,19 +14,36 @@ export async function GET(request: Request) {
   const requested = url.searchParams.get("next") ?? "/home";
   const next = requested.startsWith("/") && !requested.startsWith("//") ? requested : "/home";
 
-  if (!code) {
-    return NextResponse.redirect(new URL("/login?error=missing_code", url.origin));
+  /**
+   * When the provider refuses, Supabase sends the reason here rather than a
+   * code. Reporting only "the link was incomplete" in that case throws away
+   * the one piece of information that explains the failure — which is exactly
+   * what happened while setting Google up, and left nothing to debug from.
+   */
+  const providerError =
+    url.searchParams.get("error_description") ??
+    url.searchParams.get("error_code") ??
+    url.searchParams.get("error");
+
+  const bounce = (params: Record<string, string>) => {
+    const target = new URL("/login", url.origin);
+    for (const [key, value] of Object.entries(params)) target.searchParams.set(key, value);
+    return NextResponse.redirect(target);
+  };
+
+  if (providerError) {
+    // Capped, and rendered as text by React, so a hostile provider cannot use
+    // it to inject anything into the page.
+    return bounce({ error: "provider", message: providerError.slice(0, 300) });
   }
+
+  if (!code) return bounce({ error: "missing_code" });
 
   const supabase = await createClient();
-  if (!supabase) {
-    return NextResponse.redirect(new URL("/login?error=unconfigured", url.origin));
-  }
+  if (!supabase) return bounce({ error: "unconfigured" });
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
-    return NextResponse.redirect(new URL("/login?error=exchange_failed", url.origin));
-  }
+  if (error) return bounce({ error: "exchange_failed", message: error.message.slice(0, 300) });
 
   return NextResponse.redirect(new URL(next, url.origin));
 }
