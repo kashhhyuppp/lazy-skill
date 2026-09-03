@@ -23,12 +23,6 @@ export default async function LoginPage() {
           <LoginForm configured={supabaseConfig().isConfigured} />
         </Suspense>
       </div>
-      <Link
-        href="/explore"
-        className="mt-8 font-mono text-[12px] text-faint transition-colors hover:text-accent"
-      >
-        or just browse without an account
-      </Link>
     </main>
   );
 }

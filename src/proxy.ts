@@ -2,26 +2,40 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 /**
- * Refreshes the auth session on every navigation so server components always
- * see a valid token. Without this, sessions silently expire mid-visit.
+ * Refreshes the auth session on every navigation, and decides who is allowed
+ * where.
  *
  * Next 16 renamed the `middleware` convention to `proxy`; the export name and
  * filename both have to change or it silently stops running.
  */
+
+/** Everything behind the front door. */
+const PROTECTED = [
+  "/home",
+  "/explore",
+  "/favorites",
+  "/library",
+  "/profile",
+  "/devices",
+  "/leaderboard",
+  "/collections",
+  "/category",
+  "/skills",
+  "/pair",
+  "/p",
+];
+
+/** Matches a whole path segment, so /p never swallows /profile. */
+function covers(prefix: string, path: string) {
+  return path === prefix || path.startsWith(prefix + "/");
+}
+
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  /**
-   * Server components cannot see which path they are rendering, and the
-   * onboarding gate in the app layout needs it to know whether the visitor is
-   * already on the connect screen. Passing it as a request header is the only
-   * way through.
-   */
-  const headers = new Headers(request.headers);
-  headers.set("x-pathname", request.nextUrl.pathname);
-
-  let response = NextResponse.next({ request: { headers } });
+  const path = request.nextUrl.pathname;
+  let response = NextResponse.next({ request });
   if (!url || !anonKey) return response;
 
   const supabase = createServerClient(url, anonKey, {
@@ -33,7 +47,7 @@ export async function proxy(request: NextRequest) {
         for (const { name, value } of cookiesToSet) {
           request.cookies.set(name, value);
         }
-        response = NextResponse.next({ request: { headers } });
+        response = NextResponse.next({ request });
         for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, options);
         }
@@ -43,7 +57,46 @@ export async function proxy(request: NextRequest) {
 
   // getUser() revalidates the token with Supabase; getSession() would trust
   // whatever is in the cookie.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isProtected = PROTECTED.some((prefix) => covers(prefix, path));
+  if (!isProtected) return response;
+
+  /**
+   * Sending the redirect from a fresh response would drop the refreshed
+   * session cookies set above, signing the user out on the way to the very
+   * page they were being sent to.
+   */
+  const goTo = (target: string) => {
+    const redirect = NextResponse.redirect(new URL(target, request.url));
+    for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+    return redirect;
+  };
+
+  if (!user) {
+    return goTo(`/login?next=${encodeURIComponent(path + request.nextUrl.search)}`);
+  }
+
+  // The connect screen is the one protected page a signed-in account can
+  // always reach, or the gate below would have nowhere to send anyone.
+  if (covers("/pair", path) || covers("/p", path)) return response;
+
+  /**
+   * Connecting a computer is the whole point, and every install needs one.
+   *
+   * This lives here rather than in the app layout because the App Router does
+   * not re-render a shared layout when navigating between its children — a
+   * gate there only fires on a full page load, so every link in the app
+   * walked straight past it. The proxy sees client-side navigations too.
+   */
+  const { count } = await supabase
+    .from("devices")
+    .select("id", { count: "exact", head: true })
+    .is("revoked_at", null);
+
+  if (!count) return goTo("/pair");
 
   return response;
 }
