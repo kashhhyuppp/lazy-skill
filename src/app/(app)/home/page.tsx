@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ArrowRight, Flame, Monitor, Target, Trophy, TrendingUp } from "lucide-react";
 import { getProviderInfo, getSkillsProvider } from "@/lib/providers";
 import { getPlayerState } from "@/lib/db/gamification";
+import { listDevices } from "@/lib/db/devices";
 import { StreakCalendar } from "@/components/gamification/streak-calendar";
 import { CATEGORY_LIST } from "@/types/skill";
 import { Panel, PanelLabel } from "@/components/ui/panel";
@@ -28,6 +29,10 @@ export default async function HomePage() {
   const trending = await getSkillsProvider().list({ view: "trending", perPage: 6 });
   const provider = getProviderInfo();
   const player = await getPlayerState();
+  // The tile used to be hardcoded to "Not connected", which was wrong for
+  // anyone who had paired — and behind the connect gate it is now wrong for
+  // everyone who can see it at all.
+  const [device] = await listDevices();
 
   return (
     <div className="space-y-4">
@@ -106,11 +111,27 @@ export default async function HomePage() {
 
         <Panel className="col-span-2 p-5 lg:col-span-1">
           <PanelLabel icon={<Monitor size={11} />}>Device</PanelLabel>
-          <p className="mt-3 text-[14px] font-medium text-ink">Not connected</p>
-          <p className="mt-1 text-[12px] text-dim">Your computer is lonely.</p>
-          <ButtonLink href="/devices" size="sm" variant="outline" className="mt-4 block w-full">
-              Connect
-            </ButtonLink>
+          {device ? (
+            <>
+              <p className="mt-3 truncate text-[14px] font-medium text-ink">{device.name}</p>
+              <p className="mt-1 text-[12px] text-dim">
+                {device.online ? "Listening for installs." : "Connected, currently offline."}
+                {device.detectedAgents.length > 0 &&
+                  ` ${device.detectedAgents.length} tool${device.detectedAgents.length === 1 ? "" : "s"}.`}
+              </p>
+              <ButtonLink href="/devices" size="sm" variant="outline" className="mt-4 block w-full">
+                My devices
+              </ButtonLink>
+            </>
+          ) : (
+            <>
+              <p className="mt-3 text-[14px] font-medium text-ink">Not connected</p>
+              <p className="mt-1 text-[12px] text-dim">Your computer is lonely.</p>
+              <ButtonLink href="/pair" size="sm" variant="outline" className="mt-4 block w-full">
+                Connect
+              </ButtonLink>
+            </>
+          )}
         </Panel>
       </div>
 
