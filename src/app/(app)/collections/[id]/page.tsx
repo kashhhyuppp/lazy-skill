@@ -63,8 +63,6 @@ export default async function CollectionPage({ params }: Props) {
 
       {items.length === 0 ? (
         <EmptyState
-          expression="idle"
-          zzz
           title="EMPTY COLLECTION."
           body={
             isOwner

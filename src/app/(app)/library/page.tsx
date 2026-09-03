@@ -17,7 +17,6 @@ export default async function LibraryPage() {
       <div className="space-y-5">
         <h1 className="font-pixel text-[17px] text-ink sm:text-[20px]">LIBRARY</h1>
         <EmptyState
-          expression="waiting"
           title="SIGN IN TO BUILD COLLECTIONS."
           body="Group skills into stacks you can share."
           action={
@@ -47,7 +46,6 @@ export default async function LibraryPage() {
           inside a card that already said the same thing. */}
       {collections.length === 0 ? (
         <EmptyState
-          expression="curious"
           title="YOUR SKILL PILE IS EMPTY."
           body="Group skills into stacks you can share."
           action={<NewCollectionButton />}

@@ -4,10 +4,9 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Check, Keyboard, QrCode } from "lucide-react";
 import { ScannerView } from "@/components/pairing/scanner-view";
-import { Mascot } from "@/components/brand/mascot";
 import { CommandStep } from "@/components/pairing/command-step";
 import { Panel } from "@/components/ui/panel";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme/theme-provider";
 import { isThemeId } from "@/lib/themes";
@@ -125,7 +124,24 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
         if (isThemeId(body.device?.theme)) setTheme(body.device.theme);
 
         setPhase("paired");
-        router.refresh();
+        /**
+         * A full page load, not router.push.
+         *
+         * While this account had no computer, the proxy answered every route
+         * with a redirect here, and the client router cached those answers.
+         * router.refresh() only clears the cache for the route you are on, so
+         * afterwards every link in the app still resolved to its cached
+         * redirect and clicking did nothing at all. Reloading is the only way
+         * to discard the whole cache.
+         */
+        // The lint rule prefers a client-side navigation, which is precisely
+        // what cannot work here: it would be served from the cache built while
+        // the app was still gated.
+        window.setTimeout(
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+          () => window.location.assign("/home"),
+          3500
+        );
       } catch {
         setFailure("default");
         setPhase("failed");
@@ -169,8 +185,7 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
     const agents = device?.detected_agents ?? [];
     return (
       <Panel className="px-6 py-10 text-center">
-        <Mascot expression="excited" size={72} float className="mx-auto" />
-        <p className="mt-6 font-pixel text-[14px] text-accent">CONNECTED!</p>
+        <p className="font-pixel text-[14px] text-accent">CONNECTED!</p>
         <p className="mt-3 text-[15px] font-medium text-ink">{device?.name ?? "Your computer"}</p>
 
         {agents.length > 0 && (
@@ -184,12 +199,22 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
           </div>
         )}
 
-        <p className="mt-6 text-[13px] text-dim">Now go be lazy.</p>
+        <p className="mt-6 text-[13px] text-dim">Taking you in&hellip;</p>
         <div className="mt-7 flex flex-wrap justify-center gap-2.5">
-          <ButtonLink href="/devices" pixel className="text-[10px]">
-              MY DEVICES
-            </ButtonLink>
-          <ButtonLink href="/explore" variant="secondary">Find skills</ButtonLink>
+          {/*
+            Plain anchors on purpose. These have to be full page loads for the
+            same reason as the redirect above: a client-side navigation would
+            be served from the cache built while the app was still gated.
+          */}
+          <a
+            href="/explore"
+            className={buttonVariants({ pixel: true }) + " rounded-lg text-[10px]"}
+          >
+            FIND SKILLS
+          </a>
+          <a href="/devices" className={buttonVariants({ variant: "secondary" }) + " rounded-lg"}>
+            My devices
+          </a>
         </div>
       </Panel>
     );
@@ -198,7 +223,6 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
   if (phase === "claiming") {
     return (
       <Panel className="px-6 py-14 text-center">
-        <Mascot expression="working" size={64} float className="mx-auto" />
         <p className="mt-5 font-pixel text-[12px] text-ink">AUTHENTICATING...</p>
         <p className="mt-3 text-[13px] text-dim">Pretending this is complicated.</p>
       </Panel>
@@ -209,7 +233,6 @@ export function PairClient({ signedIn }: { signedIn: boolean }) {
     const copy = FAILURES[failure] ?? FAILURES.default;
     return (
       <Panel className="px-6 py-10 text-center">
-        <Mascot expression="annoyed" size={64} className="mx-auto" />
         <p className="mt-5 font-pixel text-[12px] leading-relaxed text-ink">{copy.title}</p>
         <p className="mt-3 text-[13px] leading-relaxed text-dim">{copy.body}</p>
         <div className="mt-7 flex flex-wrap justify-center gap-2.5">

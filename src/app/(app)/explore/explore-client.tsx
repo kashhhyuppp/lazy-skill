@@ -219,7 +219,6 @@ export function ExploreClient({
 
       {error ? (
         <EmptyState
-          expression="annoyed"
           title="THAT DIDN'T WORK."
           body="Even Lazy Skill gets tired sometimes."
           action={
@@ -237,7 +236,6 @@ export function ExploreClient({
       ) : skills.length === 0 ? (
         data?.degraded ? (
           <EmptyState
-            expression="annoyed"
             title="SEARCH IS DOWN RIGHT NOW."
             body="The skill registry isn't answering, so we can't look this up. Nothing is wrong with your search — try again in a minute."
             action={
@@ -248,7 +246,6 @@ export function ExploreClient({
           />
         ) : (
           <EmptyState
-            expression="curious"
             title="NOTHING MATCHED."
             body={`No skill here answers to "${q}". Try fewer words.`}
             action={

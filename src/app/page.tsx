@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Download, Search, Smartphone, Sparkles, Zap } from "lucide-react";
 import { Logo, Wordmark } from "@/components/brand/logo";
-import { Mascot } from "@/components/brand/mascot";
 import { ButtonLink } from "@/components/ui/button";
 import { Panel, PanelLabel } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
@@ -93,14 +92,6 @@ export default function LandingPage() {
               caret={false}
             >
               <div className="mt-5 flex items-center justify-center gap-4 sm:gap-6">
-                <Mascot
-                  expression="idle"
-                  size={96}
-                  float
-                  zzz
-                  title="Bit, the Lazy Skill mascot"
-                  className="shrink-0"
-                />
                 <QrFrame />
               </div>
               <div className="mt-5 flex items-center gap-2.5 rounded-lg border border-line bg-surface/60 px-3 py-2.5">
@@ -171,7 +162,6 @@ export default function LandingPage() {
 
           <Panel className="p-6 sm:p-8">
             <div className="flex items-center gap-3">
-              <Mascot expression="excited" size={48} />
               <div>
                 <p className="font-pixel text-[13px] text-ink">INSTALLED</p>
                 <p className="mt-1 text-[13px] text-dim">Browser Automation</p>
@@ -204,7 +194,6 @@ export default function LandingPage() {
       {/* ---------- cta ---------- */}
       <section className="border-t border-line/60">
         <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
-          <Mascot expression="happy" size={64} float className="mx-auto" />
           <h2 className="mt-6 font-pixel text-[22px] leading-relaxed text-ink sm:text-[26px]">
             NOW GO BE LAZY
           </h2>

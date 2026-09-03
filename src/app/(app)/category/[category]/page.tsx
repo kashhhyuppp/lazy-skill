@@ -58,7 +58,6 @@ export default async function CategoryPage({ params }: Props) {
 
       {page === null ? (
         <EmptyState
-          expression="annoyed"
           title="NO CATEGORIES FROM THIS SOURCE."
           body={`${provider.label} does not publish a category taxonomy, so we will not invent one. Search instead — it works.`}
           action={
@@ -72,8 +71,6 @@ export default async function CategoryPage({ params }: Props) {
           {page.isDemo && <DemoDataBanner />}
           {page.skills.length === 0 ? (
             <EmptyState
-              expression="idle"
-              zzz
               title="NOTHING HERE YET."
               body="This shelf is empty. Check back once more skills land."
             />

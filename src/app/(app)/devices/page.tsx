@@ -24,7 +24,6 @@ export default async function DevicesPage() {
 
       {!user ? (
         <EmptyState
-          expression="waiting"
           title="SIGN IN TO CONNECT A COMPUTER."
           body="A computer has to belong to an account before it can install anything."
           action={
@@ -36,7 +35,6 @@ export default async function DevicesPage() {
       ) : devices.length === 0 ? (
         <div className="grid gap-4 lg:grid-cols-2">
           <EmptyState
-            expression="waiting"
             title="YOUR COMPUTER IS LONELY."
             body="Connect it. Pairing takes about six seconds."
             className="h-full"

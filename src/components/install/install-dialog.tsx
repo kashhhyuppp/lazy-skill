@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/client";
 import { supabaseConfig } from "@/lib/supabase/config";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Mascot } from "@/components/brand/mascot";
 import { cn } from "@/lib/utils";
 
 type Phase = "choose" | "queued" | "running" | "done" | "failed";
@@ -205,8 +204,7 @@ export function InstallDialog({
         {derived === "choose" &&
           (devices.length === 0 ? (
             <div className="mt-6 text-center">
-              <Mascot expression="waiting" size={56} className="mx-auto" />
-              <p className="mt-4 font-pixel text-[11px] text-ink">NO COMPUTER CONNECTED.</p>
+              <p className="font-pixel text-[11px] text-ink">NO COMPUTER CONNECTED.</p>
               <p className="mt-3 text-[13px] leading-relaxed text-dim">
                 Installs run on your own machine, so one has to be connected first.
               </p>
@@ -321,7 +319,6 @@ export function InstallDialog({
         {(derived === "queued" || derived === "running") && (
           <div className="mt-6">
             <div className="flex items-center gap-4">
-              <Mascot expression="working" size={52} float />
               <div>
                 <p className="font-pixel text-[11px] text-ink">
                   {derived === "queued" ? "SENDING TO YOUR COMPUTER..." : "INSTALLING..."}
@@ -343,7 +340,6 @@ export function InstallDialog({
 
         {derived === "done" && (
           <div className="mt-6 text-center">
-            <Mascot expression="excited" size={64} float className="mx-auto" />
             <p className="mt-5 font-pixel text-[13px] text-accent">INSTALLED!</p>
             <div className="mt-5 space-y-3 text-left">
               {rows.map((row) => (
@@ -368,7 +364,6 @@ export function InstallDialog({
 
         {derived === "failed" && (
           <div className="mt-6 text-center">
-            <Mascot expression="annoyed" size={56} className="mx-auto" />
             <p className="mt-5 font-pixel text-[11px] leading-relaxed text-ink">
               SKILL INSTALLATION FAILED.
             </p>

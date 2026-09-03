@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Mascot } from "@/components/brand/mascot";
 
 export const metadata: Metadata = {
   title: "Offline",
@@ -10,8 +9,7 @@ export const metadata: Metadata = {
 export default function OfflinePage() {
   return (
     <main className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-6 text-center">
-      <Mascot expression="idle" size={80} float zzz />
-      <p className="mt-6 font-pixel text-[13px] leading-relaxed text-ink">YOU&apos;RE OFFLINE.</p>
+      <p className="font-pixel text-[13px] leading-relaxed text-ink">YOU&apos;RE OFFLINE.</p>
       <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-dim">
         Nothing to install without a connection. We&apos;ll be here.
       </p>

@@ -10,7 +10,7 @@ import {
   type InstallProgress,
 } from "../adapters/index.js";
 import { THEMES, rgb, style, type Theme } from "../ui/theme.js";
-import { blank, fail, hint, line, muted, ok, status } from "../ui/layout.js";
+import { blank, fail, line, muted, ok, status } from "../ui/layout.js";
 import { compactBanner } from "../ui/banner.js";
 import { messages } from "../ui/messages.js";
 

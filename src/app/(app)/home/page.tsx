@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/button";
 import { PixelProgress } from "@/components/ui/progress";
 import { SkillCard } from "@/components/skills/skill-card";
-import { Mascot } from "@/components/brand/mascot";
 import { DemoDataBanner, RegistryDownNotice, SourceNote } from "@/components/layout/data-banner";
 import { HomeSearch } from "./home-search";
 
@@ -39,8 +38,7 @@ export default async function HomePage() {
           className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full"
           style={{ background: "radial-gradient(circle, rgb(var(--ls-accent-rgb)/0.2), transparent 70%)" }}
         />
-        <div className="relative flex items-start gap-5">
-          <Mascot expression="curious" size={48} float className="shrink-0 sm:size-16" />
+        <div className="relative">
           <div className="min-w-0 flex-1">
             <h1 className="text-[22px] font-bold leading-tight text-ink sm:text-[27px]">
               What skill did you just see?

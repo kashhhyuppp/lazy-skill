@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { Zap } from "lucide-react";
 import { NAV_ITEMS } from "@/lib/nav";
 import { Logo } from "@/components/brand/logo";
-import { Mascot } from "@/components/brand/mascot";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
@@ -49,8 +48,7 @@ export function Sidebar() {
           href="/pair"
           className="rounded-lg block border border-line bg-surface/70 p-3 transition-colors hover:border-accent/50"
         >
-          <div className="flex items-center gap-3">
-            <Mascot expression="idle" size={32} zzz />
+          <div>
             <div className="min-w-0 flex-1">
               <p className="font-pixel text-[9px] uppercase tracking-[0.12em] text-faint">
                 No device

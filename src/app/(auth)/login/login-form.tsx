@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/client";
 import { EMAIL_SIGN_IN_ENABLED } from "@/lib/auth-options";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
-import { Mascot } from "@/components/brand/mascot";
 
 const ERRORS: Record<string, string> = {
   missing_code: "That sign-in link was incomplete. Try again.",
@@ -89,7 +88,6 @@ export function LoginForm({ configured }: { configured: boolean }) {
   if (!configured) {
     return (
       <Panel className="p-8 text-center">
-        <Mascot expression="annoyed" size={64} className="mx-auto" />
         <p className="mt-5 font-pixel text-[12px] leading-relaxed text-ink">
           ACCOUNTS AREN&apos;T SET UP YET.
         </p>
@@ -104,7 +102,6 @@ export function LoginForm({ configured }: { configured: boolean }) {
   if (status === "sent") {
     return (
       <Panel className="p-8 text-center">
-        <Mascot expression="happy" size={64} className="mx-auto" />
         <p className="mt-5 font-pixel text-[12px] leading-relaxed text-ink">CHECK YOUR EMAIL.</p>
         <p className="mt-3 text-[13px] leading-relaxed text-dim">
           We sent a link to <span className="text-accent">{email}</span>. That
@@ -120,8 +117,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
   return (
     <Panel className="p-7 sm:p-8">
       <div className="text-center">
-        <Mascot expression="curious" size={64} float className="mx-auto" />
-        <h1 className="mt-5 font-pixel text-[15px] text-ink">WELCOME BACK</h1>
+        <h1 className="font-pixel text-[15px] text-ink">WELCOME BACK</h1>
         <p className="mt-2.5 text-[13px] text-dim">
           Sign in to keep favorites, collections, and your streak.
         </p>

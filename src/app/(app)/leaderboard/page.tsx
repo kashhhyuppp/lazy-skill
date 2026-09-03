@@ -60,7 +60,6 @@ export default async function LeaderboardPage({ searchParams }: Props) {
       {rows.length === 0 ? (
         <>
           <EmptyState
-            expression="curious"
             title="NOBODY ON THE BOARD YET."
             body="No real player has earned XP in this window. Favorite a skill and you are instantly first."
             action={

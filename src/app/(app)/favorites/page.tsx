@@ -15,7 +15,6 @@ export default async function FavoritesPage() {
       <div className="space-y-5">
         <h1 className="font-pixel text-[17px] text-ink sm:text-[20px]">FAVORITES</h1>
         <EmptyState
-          expression="waiting"
           title="SIGN IN TO SAVE SKILLS."
           body="Favorites follow your account, so they are there on your phone too."
           action={
@@ -41,8 +40,6 @@ export default async function FavoritesPage() {
 
       {rows.length === 0 ? (
         <EmptyState
-          expression="idle"
-          zzz
           title="NOTHING HERE."
           body="You haven't been lazy enough yet. Go find a skill."
           action={

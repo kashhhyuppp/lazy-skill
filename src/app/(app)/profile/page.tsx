@@ -7,7 +7,6 @@ import { listCollections } from "@/lib/db/collections";
 import { ButtonLink } from "@/components/ui/button";
 import { Panel, PanelLabel } from "@/components/ui/panel";
 import { PixelProgress } from "@/components/ui/progress";
-import { Mascot } from "@/components/brand/mascot";
 import { Badge } from "@/components/ui/badge";
 import { getPlayerState } from "@/lib/db/gamification";
 import { AchievementGrid } from "@/components/gamification/achievement-grid";
@@ -38,7 +37,6 @@ export default async function ProfilePage() {
     <div className="space-y-4">
       <Panel className="p-6">
         <div className="flex items-center gap-5">
-          <Mascot expression={user ? "happy" : "idle"} size={64} zzz={!user} />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[20px] font-bold text-ink">{displayName}</h1>
             {user ? (

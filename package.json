@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sprite": "node scripts/build-sprite.mjs",
     "verify:registry": "node --env-file=.env.local scripts/verify-registry.mjs",
     "shots": "node scripts/shoot.mjs",
     "test": "node --experimental-strip-types --no-warnings scripts/test-levels.mts && node --experimental-strip-types --no-warnings scripts/test-pairing-code.mts && node --experimental-strip-types --no-warnings scripts/test-contract-drift.mts && node --experimental-strip-types --no-warnings scripts/test-reward-drift.mts && pnpm --filter lazy-skill test",
