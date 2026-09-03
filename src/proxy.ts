@@ -12,7 +12,16 @@ export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  let response = NextResponse.next({ request });
+  /**
+   * Server components cannot see which path they are rendering, and the
+   * onboarding gate in the app layout needs it to know whether the visitor is
+   * already on the connect screen. Passing it as a request header is the only
+   * way through.
+   */
+  const headers = new Headers(request.headers);
+  headers.set("x-pathname", request.nextUrl.pathname);
+
+  let response = NextResponse.next({ request: { headers } });
   if (!url || !anonKey) return response;
 
   const supabase = createServerClient(url, anonKey, {
@@ -24,7 +33,7 @@ export async function proxy(request: NextRequest) {
         for (const { name, value } of cookiesToSet) {
           request.cookies.set(name, value);
         }
-        response = NextResponse.next({ request });
+        response = NextResponse.next({ request: { headers } });
         for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, options);
         }
