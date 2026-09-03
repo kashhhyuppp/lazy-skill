@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight, Download, Search, Smartphone, Sparkles, Zap } from "lucide-react";
 import { Logo, Wordmark } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
@@ -221,9 +222,15 @@ export default function LandingPage() {
       <footer className="border-t border-line/60 bg-bg-deep/50">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:px-6">
           <Logo size={22} />
-          <p className="font-mono text-[11px] text-faint sm:ml-auto">
-            Do less. Install more.
-          </p>
+          <nav className="flex gap-4 font-mono text-[11px] text-faint sm:ml-auto">
+            <Link href="/privacy" className="transition-colors hover:text-ink">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-ink">
+              Terms
+            </Link>
+          </nav>
+          <p className="font-mono text-[11px] text-faint">Do less. Install more.</p>
         </div>
       </footer>
     </div>
