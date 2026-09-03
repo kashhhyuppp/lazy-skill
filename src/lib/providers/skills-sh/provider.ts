@@ -36,7 +36,6 @@ const VIEW: Record<string, ListView> = {
 export class SkillsShProvider implements SkillsProvider {
   readonly id = "skills.sh";
   readonly label = "skills.sh";
-  readonly isDemo = false;
 
   readonly capabilities: ProviderCapabilities = {
     categories: false,
@@ -65,7 +64,6 @@ export class SkillsShProvider implements SkillsProvider {
       perPage: res.pagination.perPage,
       hasMore: res.pagination.hasMore,
       providerId: this.id,
-      isDemo: false,
     };
   }
 
@@ -91,7 +89,6 @@ export class SkillsShProvider implements SkillsProvider {
       // Genuinely no more to fetch: there is no next page to ask for.
       hasMore: false,
       providerId: this.id,
-      isDemo: false,
     };
   }
 

@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { getProviderInfo, getSkillsProvider } from "@/lib/providers";
 import { CATEGORIES, CATEGORY_IDS, type CategoryId } from "@/types/skill";
 import { SkillCard } from "@/components/skills/skill-card";
-import { DemoDataBanner } from "@/components/layout/data-banner";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { ButtonLink } from "@/components/ui/button";
 
@@ -68,7 +67,6 @@ export default async function CategoryPage({ params }: Props) {
         />
       ) : (
         <>
-          {page.isDemo && <DemoDataBanner />}
           {page.skills.length === 0 ? (
             <EmptyState
               title="NOTHING HERE YET."

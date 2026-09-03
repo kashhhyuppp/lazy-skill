@@ -127,12 +127,6 @@ export interface Skill {
    * assembled from user input, never a free-form shell string (§23/§56).
    */
   installRef: string | null;
-  /**
-   * True when this record is local sample content rather than live registry
-   * data. The UI must surface this; demo and real data are never blended
-   * silently (§62).
-   */
-  isDemo: boolean;
 }
 
 export type SkillView = "trending" | "popular" | "new";
@@ -153,14 +147,12 @@ export interface SkillPage {
   hasMore: boolean;
   /** Identifies which provider served this page — shown in the data banner. */
   providerId: string;
-  /** True when every record in this page is sample content. */
-  isDemo: boolean;
   /**
-   * True when samples were served because the live source failed, rather than
-   * because this deployment has no live source configured.
+   * True when the registry could not be reached, so this page is empty
+   * because we failed rather than because there is nothing to show.
    *
-   * The difference matters to the user: "no results for docker" is a lie when
-   * we never actually managed to search.
+   * The difference matters: "no results for docker" is a lie when we never
+   * managed to search.
    */
   degraded?: boolean;
 }

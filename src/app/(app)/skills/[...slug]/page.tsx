@@ -15,7 +15,6 @@ import { getUser } from "@/lib/supabase/server";
 import { listCollections } from "@/lib/db/collections";
 import { listDevices } from "@/lib/db/devices";
 import { InstallButton } from "@/components/install/install-button";
-import { DemoDataBanner } from "@/components/layout/data-banner";
 
 type Props = { params: Promise<{ slug: string[] }> };
 
@@ -79,7 +78,6 @@ export default async function SkillDetailPage({ params }: Props) {
         ← back to explore
       </Link>
 
-      {skill.isDemo && <DemoDataBanner />}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         {/* ---------- main ---------- */}
@@ -92,7 +90,6 @@ export default async function SkillDetailPage({ params }: Props) {
                   <h1 className="text-[22px] font-bold leading-tight text-ink sm:text-[26px]">
                     {skill.name}
                   </h1>
-                  {skill.isDemo && <Badge tone="demo">Sample</Badge>}
                 </div>
                 <p className="mt-1.5 font-mono text-[12px] text-faint">{skill.source}</p>
                 <p className="mt-3 text-[14px] leading-relaxed text-dim">{skill.summary}</p>

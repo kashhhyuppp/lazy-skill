@@ -12,8 +12,6 @@ const badge = cva(
         ok: "border-ok/35 bg-ok/10 text-ok",
         warn: "border-warn/35 bg-warn/10 text-warn",
         fail: "border-fail/35 bg-fail/10 text-fail",
-        /** Reserved for marking sample content. Deliberately loud. */
-        demo: "border-warn/50 bg-warn/12 text-warn font-pixel text-[9px] uppercase tracking-[0.12em]",
       },
     },
     defaultVariants: { tone: "neutral" },

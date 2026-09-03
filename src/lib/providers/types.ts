@@ -30,8 +30,6 @@ export interface SkillsProvider {
   /** Short stable id, surfaced in the UI so users know where data came from. */
   readonly id: string;
   readonly label: string;
-  /** True when this provider serves sample content rather than live data. */
-  readonly isDemo: boolean;
   readonly capabilities: ProviderCapabilities;
 
   list(query: SkillQuery): Promise<SkillPage>;

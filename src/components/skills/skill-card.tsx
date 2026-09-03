@@ -5,7 +5,6 @@ import { Download, Heart, TrendingUp } from "lucide-react";
 import type { Skill } from "@/types/skill";
 import { compactNumber, cn } from "@/lib/utils";
 import { Panel } from "@/components/ui/panel";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SkillSigil } from "./skill-sigil";
 import { CompatBadges } from "./compat-badges";
@@ -111,7 +110,6 @@ export function SkillCard({ skill, compact = false }: { skill: Skill; compact?: 
             whenUnknown="none"
           />
           <div className="flex items-center gap-2">
-            {skill.isDemo && <Badge tone="demo">Sample</Badge>}
             <Button
               size="sm"
               pixel

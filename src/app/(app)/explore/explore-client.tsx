@@ -17,7 +17,7 @@ import { SearchBar } from "@/components/search/search-bar";
 import { SkillCard } from "@/components/skills/skill-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { DemoDataBanner, RegistryDownNotice, SourceNote } from "@/components/layout/data-banner";
+import { RegistryDownNotice, SourceNote } from "@/components/layout/data-banner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -211,8 +211,6 @@ export function ExploreClient({
 
       {data?.degraded ? (
         <RegistryDownNotice />
-      ) : data?.isDemo ? (
-        <DemoDataBanner />
       ) : (
         <SourceNote label={provider.label} />
       )}
@@ -257,11 +255,9 @@ export function ExploreClient({
         )
       ) : (
         <>
-          <p className="font-mono text-[11px] text-faint">
-            {skills.length} skill{skills.length === 1 ? "" : "s"}
-            {q && ` for "${q}"`}
-            {data?.hasMore ? " so far" : ""}
-          </p>
+          {q && (
+            <p className="font-mono text-[11px] text-faint">Results for &ldquo;{q}&rdquo;</p>
+          )}
           <div
             className={cn(
               "grid gap-3 transition-opacity sm:grid-cols-2 xl:grid-cols-3",

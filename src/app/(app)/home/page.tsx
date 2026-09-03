@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/button";
 import { PixelProgress } from "@/components/ui/progress";
 import { SkillCard } from "@/components/skills/skill-card";
-import { DemoDataBanner, RegistryDownNotice, SourceNote } from "@/components/layout/data-banner";
+import { RegistryDownNotice, SourceNote } from "@/components/layout/data-banner";
 import { HomeSearch } from "./home-search";
 
 // Rendered per request, never at build time. This page depends on the
@@ -128,8 +128,6 @@ export default async function HomePage() {
 
         {trending.degraded ? (
           <RegistryDownNotice />
-        ) : trending.isDemo ? (
-          <DemoDataBanner />
         ) : (
           <SourceNote label={provider.label} />
         )}

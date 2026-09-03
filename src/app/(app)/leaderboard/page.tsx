@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { ButtonLink } from "@/components/ui/button";
 import { compactNumber, cn } from "@/lib/utils";
-import { DemoLeaderboard } from "./demo-board";
 
 export const metadata: Metadata = { title: "Leaderboard" };
 
@@ -58,18 +57,15 @@ export default async function LeaderboardPage({ searchParams }: Props) {
       </div>
 
       {rows.length === 0 ? (
-        <>
-          <EmptyState
-            title="NOBODY ON THE BOARD YET."
-            body="No real player has earned XP in this window. Favorite a skill and you are instantly first."
-            action={
-              <ButtonLink href="/explore" pixel className="text-[10px]">
-                  EARN SOME XP
-                </ButtonLink>
-            }
-          />
-          <DemoLeaderboard />
-        </>
+        <EmptyState
+          title="NOBODY ON THE BOARD YET."
+          body="No real player has earned XP in this window. Favorite a skill and you are instantly first."
+          action={
+            <ButtonLink href="/explore" pixel className="text-[10px]">
+              EARN SOME XP
+            </ButtonLink>
+          }
+        />
       ) : (
         <ul className="space-y-2">
           {rows.map((row) => {

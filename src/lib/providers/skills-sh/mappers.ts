@@ -43,7 +43,6 @@ export function mapSkill(api: ApiSkill, trendingRank: number | null = null): Ski
     updatedAt: null,
     audits: null,
     installRef: api.installUrl ?? api.id,
-    isDemo: false,
   };
 }
 
